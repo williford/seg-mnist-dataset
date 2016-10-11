@@ -9,23 +9,37 @@ import math
 
 
 class MNIST(object):
-    def __init__(self, root_dir="", slice_percent=None, seed=2016):
+    """ Class to read MNIST dataset.
+    """
+    def __init__(self, root_dir="", dataset_slice=None, seed=2016):
         self.root_dir = root_dir
         self.lbl = None
         self.img = None
-        assert slice_percent==None or len(slice_percent)==2
-        self.slice_percent = slice_percent
+        assert dataset_slice is None or len(dataset_slice) == 2
+        self.slice = dataset_slice
         self.seed_start = seed
         self.seed_current = seed
 
+    def __len__(self):
+        """ Return the number of images in dataset, or throw error if
+            not initialized.
+        """
+        return len(self.lbl)
+
     def load_standard(self, name):
+        """ Convenience function to load one of the standard MNIST datasets.
+        """
         if name == 'training':
-            return self.load('train-images-idx3-ubyte', 'train-labels-idx1-ubyte')
+            return self.load('train-images-idx3-ubyte',
+                             'train-labels-idx1-ubyte')
         elif name == 'testing':
-            return self.load('t10k-images-idx3-ubyte', 't10k-labels-idx1-ubyte')
+            return self.load('t10k-images-idx3-ubyte',
+                             't10k-labels-idx1-ubyte')
         raise RuntimeError('Unknown standard dataset "%s".' % name)
 
     def load(self, image_file, label_file):
+        """ Load an image and label file pair in LeCunn's MNIST data format.
+        """
         # set random seed for every new dataset
         self.seed_current = self.seed_start
         with open(os.path.join(self.root_dir, label_file), 'rb') as flbl:
@@ -37,19 +51,27 @@ class MNIST(object):
 
         with open(os.path.join(self.root_dir, image_file), 'rb') as fimg:
             magic, num, rows, cols = struct.unpack(">IIII", fimg.read(16))
-            img = np.fromfile(fimg, dtype=np.uint8).reshape(len(lbl), rows, cols)
+            img = np.fromfile(fimg, dtype=np.uint8).reshape(
+                len(lbl), rows, cols)
 
-        begin = int(math.floor(self.slice_percent[0] / 100.0 * len(lbl)))
-        end = int(math.floor(self.slice_percent[1] / 100.0 * len(lbl)) + 1)
-
+        if self.slice is None:
+            begin = 0
+            end = len(lbl)
+        else:
+            begin = self.slice[0]
+            end = self.slice[1]
         self.lbl = lbl[begin:end]
         self.img = img[begin:end]
 
         return self.lbl, self.img
 
     def random(self, max_iter=float("inf")):
+        """ Randomly iterate over the image and file pairs (sampling with
+            replacement), potentially forever.
+        """
         if self.lbl is None or self.img is None:
-            raise RuntimeError("Dataset must be loaded before calling random().")
+            raise RuntimeError("Dataset must be loaded before " +
+                               "calling random().")
 
         while max_iter > 0:
             # set seed before each random range call
@@ -58,4 +80,22 @@ class MNIST(object):
 
             i = random.randrange(len(self.lbl))
             yield (self.lbl[i], self.img[i])
+            max_iter -= 1
+
+    def iter(self, max_iter=None):
+        """ Iterate over the image and file pairs.
+        
+            By default, iterates over dataset once, but can be more (or infinite).
+        """
+        if self.lbl is None or self.img is None:
+            raise RuntimeError("Dataset must be loaded before " +
+                               "calling random().")
+
+        if max_iter == None:
+            max_iter = len(self.lbl)
+
+        while max_iter > 0:
+            # set seed before each random range call
+            i = random.randrange(len(self.lbl))
+            yield (self.lbl[i % len(self.lbl)], self.img[i % len(self.lbl)])
             max_iter -= 1

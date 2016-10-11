@@ -10,8 +10,6 @@ import pandas as pd
 
 import pdb
 
-from seg_mnist_2x2 import generate_segmnist_2x2_training_images
-
 
 def mkdirs(path):
     """ Make directories, ignoring errors if directory already exists.
@@ -26,7 +24,7 @@ def mkdirs(path):
             raise
 
 
-def generate_training_images():
+def generate_segmnist_2x2_training_images():
     """ Generates training (and validation) images from the MNIST.  """
     if "MNIST_PATH" in os.environ:
         path = os.environ["MNIST_PATH"]
@@ -47,9 +45,9 @@ def generate_training_images():
     print("Number of validation examples: %d" % len(mnist['val']))
 
     for subfolder in ['trn', 'val', 'tst']:
-        mkdirs("seg-mnist-0/%s" % subfolder)
+        mkdirs("seg-mnist-2x2-0/%s" % subfolder)
 
-    # generate stimuli with 1 stimulus in a 3x3 grid
+    # generate stimuli with 1 stimulus in a 2x2 grid
     miter = dict()  # mnist iterator
     miter['trn'] = mnist['trn'].iter(max_iter=float('inf'))
     miter['val'] = mnist['val'].iter(max_iter=float('inf'))
@@ -64,9 +62,9 @@ def generate_training_images():
         imgseglbl = []  # image, segmented image, label information
         imglbl = []  # image, label information
 
-        for pos in range(9):
-            i = pos % 3
-            j = pos // 3
+        for pos in range(2*2):
+            i = pos % 2
+            j = pos // 2
 
             for within_grid in range(within_grid_count):
                 label, data = miter[mode].next()
@@ -75,16 +73,16 @@ def generate_training_images():
                 h = data.shape[1]
                 offset_i = i * w
                 offset_j = j * h
-                new_data = np.zeros((3 * w, 3 * h), dtype=np.uint8)
-                new_label = np.ones((3 * w, 3 * h), dtype=np.uint8) * 255
+                new_data = np.zeros((2 * w, 2 * h), dtype=np.uint8)
+                new_label = np.ones((2 * w, 2 * h), dtype=np.uint8) * 255
 
                 new_data[offset_i:offset_i + w, offset_j:offset_j + h] = data
                 new_label[offset_i:offset_i + w,
                           offset_j:offset_j + h][data > 0] = label
 
-                fn_img = "seg-mnist-0/%s/mnistseg_%07d-image.png" % (
+                fn_img = "seg-mnist-2x2-0/%s/mnistseg_%07d-image.png" % (
                     mode, stimulus_number)
-                fn_seg = "seg-mnist-0/%s/mnistseg_%07d-segm.png" % (
+                fn_seg = "seg-mnist-2x2-0/%s/mnistseg_%07d-segm.png" % (
                     mode, stimulus_number)
                 scipy.misc.imsave(fn_img, new_data)
                 scipy.misc.imsave(fn_seg, new_label)
@@ -93,7 +91,7 @@ def generate_training_images():
                 one_hot_label = np.zeros(10, np.uint8)
                 one_hot_label[label] = 1
 
-                data = ["/" + fn_img, "/" + fn_seg, 0, 0, 3 * w, 3 * h]
+                data = ["/" + fn_img, "/" + fn_seg, 0, 0, 2 * w, 2 * h]
                 data.extend(one_hot_label.tolist())
 
                 series = pd.Series(data, index=columns)
@@ -105,14 +103,9 @@ def generate_training_images():
         
         imgseglbl_df = pd.DataFrame(imgseglbl, columns=columns)
 
-        imgseglbl_df.to_csv("seg-mnist-0_%s.segmentation.txt" % mode, sep=' ', header=False, index=False)
+        imgseglbl_df.to_csv("seg-mnist-2x2-0_%s.segmentation.txt" % mode, sep=' ', header=False, index=False)
 
         imglbl_df = pd.DataFrame(imglbl, columns=columns_imglbl)
-        imglbl_df.to_csv("seg-mnist-0_%s.classification.txt" % mode, sep=' ', header=False, index=False)
+        imglbl_df.to_csv("seg-mnist-2x2-0_%s.classification.txt" % mode, sep=' ', header=False, index=False)
 
     assert(len(mnist['trn']) + len(mnist['val']) == len(training_all))
-
-
-if __name__ == "__main__":
-    # generate_training_images()
-    generate_segmnist_2x2_training_images()
