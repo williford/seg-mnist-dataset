@@ -2,7 +2,6 @@
 
 import os
 import loader
-import matplotlib.pyplot as plt
 import scipy.misc
 import numpy as np
 import errno
