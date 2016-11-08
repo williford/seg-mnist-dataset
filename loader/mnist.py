@@ -94,8 +94,9 @@ class MNIST(object):
         if max_iter == None:
             max_iter = len(self.lbl)
 
+        i=0
         while max_iter > 0:
             # set seed before each random range call
-            i = random.randrange(len(self.lbl))
             yield (self.lbl[i % len(self.lbl)], self.img[i % len(self.lbl)])
             max_iter -= 1
+            i+=1
