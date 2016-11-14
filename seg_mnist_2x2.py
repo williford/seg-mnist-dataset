@@ -339,7 +339,8 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
                 seg_label_bg[0,0][new_seg_label == lbl+1] = 0
 
                 # set other labels to be background
-                f['seg-label'] = np.concatenate((seg_label_bg, seg_label_fg), axis=1)
+                #f['seg-label'] = np.concatenate((seg_label_bg, seg_label_fg), axis=1)
+                f['seg-label'] = seg_label_fg
 
             hsegfiles.append(fn_hdf5_seg)
 
