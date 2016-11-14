@@ -26,6 +26,20 @@ def mkdirs(path):
             raise
 
 
+def generate_segmnist_2x2_classification_images():
+
+    flist = generate_segmnist_2x2_training_images_bgmask(mask_bg=False)
+
+    for f1 in flist:
+        task = f1[0]
+        mode = f1[1]
+        if task != 'classification':
+            continue
+
+        with open("%s-segmnist-2x2-any.%s.txt" % (task, mode), 'w') as f:
+            for line in f1[2]:
+                f.write(line + '\n')
+
 def generate_segmnist_2x2_training_images():
 
     flist = generate_segmnist_2x2_training_images_bgmask(mask_bg=False)
@@ -37,8 +51,9 @@ def generate_segmnist_2x2_training_images():
         with open("%s-segmnist-2x2-any.%s.txt" % (task, mode), 'w') as f:
             for line in f1[2]:
                 f.write(line + '\n')
-            for line in f2[2]:
-                f.write(line + '\n')
+            if task != 'classification' or flist_bgmask is None:
+                for line in f2[2]:
+                    f.write(line + '\n')
 
 
 def generate_segmnist_2x2_training_images_bgmask(mask_bg):
