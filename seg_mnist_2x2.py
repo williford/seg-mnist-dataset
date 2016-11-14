@@ -326,22 +326,21 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
 
                 # set default values to be background
                 # (used for the digits with other labels)
-                seg_label_fg = np.zeros(new_seg_label.shape)
-                seg_label_bg = np.ones(new_seg_label.shape)
+                seg_label_fg = np.zeros((1, 1, new_seg_label.shape[0], new_seg_label.shape[1]))
+                seg_label_bg = np.ones((1, 1, new_seg_label.shape[0], new_seg_label.shape[1]))
 
                 # retain masked out regions
                 # (if mask_bg, this includes the original background)
-                seg_label_fg[new_seg_label == 255] = 255
-                seg_label_bg[new_seg_label == 255] = 255
+                seg_label_fg[0,0][new_seg_label == 255] = 255
+                seg_label_bg[0,0][new_seg_label == 255] = 255
 
                 # set current label to foreground
-                seg_label_fg[new_seg_label == lbl+1] = 1
-                seg_label_bg[new_seg_label == lbl+1] = 0
+                seg_label_fg[0,0][new_seg_label == lbl+1] = 1
+                seg_label_bg[0,0][new_seg_label == lbl+1] = 0
 
                 # set other labels to be background
-                seg = np.concatenate((seg_label_bg, seg_label_fg), axis=1)
-
                 f['seg-label'] = np.concatenate((seg_label_bg, seg_label_fg), axis=1)
+
             hsegfiles.append(fn_hdf5_seg)
 
         if cells_with_num == 1:
