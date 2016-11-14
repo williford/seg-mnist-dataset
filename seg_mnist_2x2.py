@@ -27,45 +27,92 @@ def mkdirs(path):
 
 
 def generate_segmnist_2x2_training_images():
+
+    flist = generate_segmnist_2x2_training_images_bgmask(mask_bg=False)
+    flist_bgmask = generate_segmnist_2x2_training_images_bgmask(mask_bg=True)
+
+    for (f1, f2) in zip(flist, flist_bgmask):
+        task = f1[0]
+        mode = f1[1]
+        with open("%s-segmnist-2x2-any.%s.txt" % (task, mode), 'w') as f:
+            for line in f1[2]:
+                f.write(line + '\n')
+            for line in f2[2]:
+                f.write(line + '\n')
+
+
+def generate_segmnist_2x2_training_images_bgmask(mask_bg):
     # generate_segmnist_2x2_all_training_images(mask_bg=True)
     # generate_segmnist_2x2_1_training_images()
-    generate_segmnist_2x2_all_training_images()
+    filelists = list()
+    for ncells in range(1, 5):
+        filelists.append(
+            generate_segmnist_2x2_all_training_images(cells_with_num=ncells,
+                                                      mask_bg=mask_bg))
 
-
-def generate_segmnist_2x2_1_training_images():
-    output_dir = 'seg-mnist-2x2-1'
-    for subfolder in ['trn', 'val', 'tst']:
-        mkdirs("%s/%s" % (output_dir, subfolder))
-
-    if "MNIST_PATH" in os.environ:
-        path = os.environ["MNIST_PATH"]
+    if mask_bg:
+        mask_bg_str = 'without_bgmask'
     else:
-        path = os.path.expanduser("~/Data/mnist")
+        mask_bg_str = 'with_bgmask'
 
-    mnist_trn = loader.MNIST(path, dataset_slice=(0, 5000))
-    mnist_trn.load_standard('training')
+    filelists2 = [
+        ('classification', 'trn',
+         [fn for file_quad in filelists for fn in file_quad['trn_cls']],
+         mask_bg_str),
+        ('segmentation', 'trn',
+         [fn for file_quad in filelists for fn in file_quad['trn_seg']],
+         mask_bg_str),
+        ('classification', 'val',
+         [fn for file_quad in filelists for fn in file_quad['val_cls']],
+         mask_bg_str),
+        ('segmentation', 'val',
+         [fn for file_quad in filelists for fn in file_quad['val_seg']],
+         mask_bg_str)]
 
-    mnist_val = loader.MNIST(path, dataset_slice=(5000, 6000))
-    mnist_val.load_standard('training')
+    for (task, mode, filenames, mask_bg_str) in filelists2:
+        fn = "%s-segmnist-2x2-any_%s.%s.txt" % (task, mask_bg_str, mode)
+        print fn
+        with open(fn, 'w') as f:
+            for line in filenames:
+                f.write(line + '\n')
 
-    generate_segmnist_2x2_x_images(dataset=mnist_trn,
-                                   output_dir=output_dir,
-                                   mode='trn',
-                                   num_examples=30 * 1000,
-                                   cells_with_num=1)
-
-    generate_segmnist_2x2_x_images(dataset=mnist_val,
-                                   output_dir=output_dir,
-                                   mode='val',
-                                   num_examples=5 * 1000,
-                                   cells_with_num=1)
+    return filelists2
 
 
-def generate_segmnist_2x2_all_training_images(mask_bg=False):
+# def generate_segmnist_2x2_1_training_images():
+#     output_dir = 'seg-mnist-2x2-1'
+#     for subfolder in ['trn', 'val', 'tst']:
+#         mkdirs("%s/%s" % (output_dir, subfolder))
+#
+#     if "MNIST_PATH" in os.environ:
+#         path = os.environ["MNIST_PATH"]
+#     else:
+#         path = os.path.expanduser("~/Data/mnist")
+#
+#     mnist_trn = loader.MNIST(path, dataset_slice=(0, 5000))
+#     mnist_trn.load_standard('training')
+#
+#     mnist_val = loader.MNIST(path, dataset_slice=(5000, 6000))
+#     mnist_val.load_standard('training')
+#
+#     generate_segmnist_2x2_x_images(dataset=mnist_trn,
+#                                    output_dir=output_dir,
+#                                    mode='trn',
+#                                    num_examples=30 * 1000,
+#                                    cells_with_num=1)
+#
+#     generate_segmnist_2x2_x_images(dataset=mnist_val,
+#                                    output_dir=output_dir,
+#                                    mode='val',
+#                                    num_examples=5 * 1000,
+#                                    cells_with_num=1)
+
+
+def generate_segmnist_2x2_all_training_images(cells_with_num, mask_bg=False):
     if not mask_bg:
-        output_dir = 'seg-mnist-2x2-all'
+        output_dir = 'seg-mnist-2x2-%d' % cells_with_num
     else:
-        output_dir = 'seg-mnist-2x2-all-bgmask'
+        output_dir = 'seg-mnist-2x2-%d-bgmask' % cells_with_num
 
     for subfolder in ['trn', 'val', 'tst']:
         mkdirs("%s/%s" % (output_dir, subfolder))
@@ -81,19 +128,27 @@ def generate_segmnist_2x2_all_training_images(mask_bg=False):
     mnist_val = loader.MNIST(path, dataset_slice=(5000, 6000))
     mnist_val.load_standard('training')
 
-    generate_segmnist_2x2_x_images(dataset=mnist_trn,
-                                   output_dir=output_dir,
-                                   mode='trn',
-                                   num_examples=100 * 1000,
-                                   cells_with_num=4,
-                                   mask_bg=mask_bg)
+    (hclsfiles_trn, hsegfiles_trn) = (
+        generate_segmnist_2x2_x_images(dataset=mnist_trn,
+                                       output_dir=output_dir,
+                                       mode='trn',
+                                       num_examples=100 * 1000,
+                                       cells_with_num=cells_with_num,
+                                       mask_bg=mask_bg))
 
-    generate_segmnist_2x2_x_images(dataset=mnist_val,
-                                   output_dir=output_dir,
-                                   mode='val',
-                                   num_examples=15 * 1000,
-                                   cells_with_num=4,
-                                   mask_bg=mask_bg)
+    (hclsfiles_val, hsegfiles_val) = (
+        generate_segmnist_2x2_x_images(dataset=mnist_val,
+                                       output_dir=output_dir,
+                                       mode='val',
+                                       num_examples=15 * 1000,
+                                       cells_with_num=cells_with_num,
+                                       mask_bg=mask_bg))
+    return dict(
+        trn_cls=hclsfiles_trn,
+        trn_seg=hsegfiles_trn,
+        val_cls=hclsfiles_val,
+        val_seg=hsegfiles_val,
+    )
 
 
 def generate_grid(mnist_iter, grid, mnist_shape=(28, 28)):
@@ -282,12 +337,25 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
             with h5py.File(fn_hdf5_seg, 'w') as f:
                 f['data'] = new_data.reshape((1, 1, 56, 56))
                 f['cls-label'] = one_hot_label.reshape((1, 10, 1, 1))
-                seg_label = new_seg_label.copy()
+
+                # set default values to be background
+                # (used for the digits with other labels)
+                seg_label_fg = np.zeros(new_seg_label.shape)
+                seg_label_bg = np.ones(new_seg_label.shape)
+
+                # retain masked out regions
+                # (if mask_bg, this includes the original background)
+                seg_label_fg[new_seg_label == 255] = 255
+                seg_label_bg[new_seg_label == 255] = 255
+
+                # set current label to foreground
+                seg_label_fg[new_seg_label == lbl+1] = 1
+                seg_label_bg[new_seg_label == lbl+1] = 0
+
                 # set other labels to be background
-                seg_label[np.logical_and(
-                    seg_label != lbl + 1,
-                    seg_label != 255)] = 0
-                f['seg-label'] = seg_label
+                seg = np.concatenate((seg_label_bg, seg_label_fg), axis=1)
+
+                f['seg-label'] = np.concatenate((seg_label_bg, seg_label_fg), axis=1)
             hsegfiles.append(fn_hdf5_seg)
 
         if cells_with_num == 1:
@@ -313,3 +381,5 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
         imglbl_df = pd.DataFrame(imglbl, columns=columns_imglbl)
         imglbl_df.to_csv("%s_%s.classification.txt" % (output_dir, mode),
                          sep=' ', header=False, index=False)
+
+    return (hclsfiles, hsegfiles)

@@ -1,3 +1,9 @@
+# Generated datasets
+seg-mnist*/
+seg-mnist*.txt
+classification*.txt
+segmentation*.txt
+
 # swap
 [._]*.s[a-w][a-z]
 [._]s[a-w][a-z]
