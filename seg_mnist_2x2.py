@@ -94,35 +94,6 @@ def generate_segmnist_2x2_training_images_bgmask(mask_bg):
     return filelists2
 
 
-# def generate_segmnist_2x2_1_training_images():
-#     output_dir = 'seg-mnist-2x2-1'
-#     for subfolder in ['trn', 'val', 'tst']:
-#         mkdirs("%s/%s" % (output_dir, subfolder))
-#
-#     if "MNIST_PATH" in os.environ:
-#         path = os.environ["MNIST_PATH"]
-#     else:
-#         path = os.path.expanduser("~/Data/mnist")
-#
-#     mnist_trn = loader.MNIST(path, dataset_slice=(0, 5000))
-#     mnist_trn.load_standard('training')
-#
-#     mnist_val = loader.MNIST(path, dataset_slice=(5000, 6000))
-#     mnist_val.load_standard('training')
-#
-#     generate_segmnist_2x2_x_images(dataset=mnist_trn,
-#                                    output_dir=output_dir,
-#                                    mode='trn',
-#                                    num_examples=30 * 1000,
-#                                    cells_with_num=1)
-#
-#     generate_segmnist_2x2_x_images(dataset=mnist_val,
-#                                    output_dir=output_dir,
-#                                    mode='val',
-#                                    num_examples=5 * 1000,
-#                                    cells_with_num=1)
-
-
 def generate_segmnist_2x2_all_training_images(cells_with_num, mask_bg=False):
     if not mask_bg:
         output_dir = 'seg-mnist-2x2-%d' % cells_with_num
@@ -147,7 +118,7 @@ def generate_segmnist_2x2_all_training_images(cells_with_num, mask_bg=False):
         generate_segmnist_2x2_x_images(dataset=mnist_trn,
                                        output_dir=output_dir,
                                        mode='trn',
-                                       num_examples=100 * 1000,
+                                       num_examples=50 * 1000,
                                        cells_with_num=cells_with_num,
                                        mask_bg=mask_bg))
 
@@ -155,7 +126,7 @@ def generate_segmnist_2x2_all_training_images(cells_with_num, mask_bg=False):
         generate_segmnist_2x2_x_images(dataset=mnist_val,
                                        output_dir=output_dir,
                                        mode='val',
-                                       num_examples=15 * 1000,
+                                       num_examples=10 * 1000,
                                        cells_with_num=cells_with_num,
                                        mask_bg=mask_bg))
     return dict(
