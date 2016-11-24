@@ -66,9 +66,9 @@ def generate_segmnist_2x2_training_images_bgmask(mask_bg):
                                                       mask_bg=mask_bg))
 
     if mask_bg:
-        mask_bg_str = 'without_bgmask'
-    else:
         mask_bg_str = 'with_bgmask'
+    else:
+        mask_bg_str = 'without_bgmask'
 
     filelists2 = [
         ('classification', 'trn',
@@ -119,16 +119,20 @@ def generate_segmnist_2x2_all_training_images(cells_with_num, mask_bg=False):
                                        output_dir=output_dir,
                                        mode='trn',
                                        num_examples=50 * 1000,
+                                       # num_examples=50,
                                        cells_with_num=cells_with_num,
-                                       mask_bg=mask_bg))
+                                       mask_bg=mask_bg,
+                                       seed_offset=0))
 
     (hclsfiles_val, hsegfiles_val) = (
         generate_segmnist_2x2_x_images(dataset=mnist_val,
                                        output_dir=output_dir,
                                        mode='val',
                                        num_examples=10 * 1000,
+                                       # num_examples=10,
                                        cells_with_num=cells_with_num,
-                                       mask_bg=mask_bg))
+                                       mask_bg=mask_bg,
+                                       seed_offset=50 * 1000))
     return dict(
         trn_cls=hclsfiles_trn,
         trn_seg=hsegfiles_trn,
@@ -172,17 +176,30 @@ def generate_grid(mnist_iter, grid, mnist_shape=(28, 28)):
 import math
 
 
-def random_texture(shape):
-    mean = np.random.uniform(0, 255)
-    var = np.random.gamma(2, 4)
-    return np.random.normal(loc=mean, scale=math.sqrt(var), size=shape)
+def random_texture(shape,
+                   mean=np.random.uniform(0, 255),
+                   var=np.random.gamma(2, 4)):
+    if var == 0:
+        texture = np.ones(shape)*mean
+    else:
+        texture = np.random.normal(loc=mean, scale=math.sqrt(var), size=shape)
+
+    texture[texture > 255] = 255
+    texture[texture < 0] = 0
+    return texture
 
 
 def generate_textured_grid(mnist_iter, grid, mnist_shape=(28, 28),
                            bgmask=False):
+
+    num_means = 10
+    potential_means = np.arange(num_means)*(255./(num_means-1))
+    np.random.shuffle(potential_means)
+
     h = mnist_shape[0]
     w = mnist_shape[1]
-    new_data = random_texture((2 * h, 2 * w))
+    new_data = random_texture((2 * h, 2 * w), mean=potential_means[-1])
+    potential_means = potential_means[0:-1]
     new_segm = np.zeros((2 * h, 2 * w), dtype=np.uint8)
     labels = set()
 
@@ -194,7 +211,8 @@ def generate_textured_grid(mnist_iter, grid, mnist_shape=(28, 28),
             label1, data1 = mnist_iter.next()
             data1 = data1.astype(dtype=np.float)
             labels.add(label1)
-            label_texture = random_texture((h, w))
+            label_texture = random_texture((h, w), mean=potential_means[-1])
+            potential_means = potential_means[0:-1]
 
             # Position of "first" number
             offset_i = i * w
@@ -227,7 +245,7 @@ def generate_textured_grid(mnist_iter, grid, mnist_shape=(28, 28),
 
 
 def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
-                                   cells_with_num, mask_bg=False):
+                                   cells_with_num, mask_bg=False, seed_offset=0):
     """ Generates 2x2 grid where some cells contain an MNIST number.
 
         dataset - source MNIST dataset loader
@@ -252,7 +270,7 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
     hclsfiles = []
 
     for stimulus_number in range(num_examples):
-        np.random.seed(stimulus_number)
+        np.random.seed(stimulus_number + seed_offset)
         grid = np.array(grid_arrangements.next(), dtype=np.bool).reshape(2, 2)
         (new_data, new_seg_label, labels) = (
             generate_textured_grid(mnist_iter, grid, bgmask=mask_bg))
