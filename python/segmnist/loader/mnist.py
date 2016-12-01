@@ -1,4 +1,4 @@
-# Based on https://gist.github.com/akesling/5358964
+# Some code from https://gist.github.com/akesling/5358964
 
 import os
 import struct
@@ -9,7 +9,7 @@ import math
 
 
 class MNIST(object):
-    """ Class to read MNIST dataset.
+    """ Class to read MNIST dataset and iterate examples in original order.
     """
     def __init__(self, root_dir="", dataset_slice=None, seed=2016):
         self.root_dir = root_dir
@@ -65,22 +65,6 @@ class MNIST(object):
 
         return self.lbl, self.img
 
-    def random(self, max_iter=float("inf")):
-        """ Randomly iterate over the image and file pairs (sampling with
-            replacement), potentially forever.
-        """
-        if self.lbl is None or self.img is None:
-            raise RuntimeError("Dataset must be loaded before " +
-                               "calling random().")
-
-        while max_iter > 0:
-            # set seed before each random range call
-            random.seed(self.seed_current)
-            self.seed_current += 1
-
-            i = random.randrange(len(self.lbl))
-            yield (self.lbl[i], self.img[i])
-            max_iter -= 1
 
     def iter(self, max_iter=None):
         """ Iterate over the image and file pairs.
@@ -100,3 +84,6 @@ class MNIST(object):
             yield (self.lbl[i % len(self.lbl)], self.img[i % len(self.lbl)])
             max_iter -= 1
             i+=1
+
+    def is_shuffled(self):
+        return False
