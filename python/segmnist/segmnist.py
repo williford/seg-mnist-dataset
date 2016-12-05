@@ -55,6 +55,10 @@ class SegMNIST(object):
             raise RuntimeError('Unknown standard MNIST-type dataset: %s' %
                                name)
 
+    """ Return batch with images, class labels, and segmentation labels.
+        cls_label is a sparse vector with 1 set for every digit that
+        appears in image.
+    """
     def create_batch(self, batch_size):
         img_data = np.zeros((batch_size, 1,
                              28 * self._gridH,
@@ -80,9 +84,12 @@ class SegMNIST(object):
             img_data[n, 0] = new_data
             seg_label[n] = new_segm
 
+            for lbl in labels:
+                cls_label[n, lbl, 0, 0] = 1
+
             # Randomly pick a label
-            lbl = random.sample(labels, 1)[0]
-            cls_label[n, lbl, 0, 0] = 1
+            # lbl = random.sample(labels, 1)[0]
+            # cls_label[n, lbl, 0, 0] = 1
 
             # from PIL import Image
             # img = Image.fromarray(new_data, 'L')

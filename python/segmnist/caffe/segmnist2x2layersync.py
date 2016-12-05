@@ -10,6 +10,7 @@ import numpy as np
 import os.path as osp
 
 from xml.dom import minidom
+import random
 from random import shuffle
 from threading import Thread
 from PIL import Image
@@ -46,8 +47,10 @@ class SegMNIST2x2LayerSync(caffe.Layer):
         self.prob_mask_bg = params['prob_mask_bg']
 
         # Create a batch loader to load the images.
-        self.mnist = SegMNIST.load_standard_MNIST(self.mnist_dataset_name, shuffle=True)  # BatchLoader(params, None)
-        self.batch_loader = SegMNIST(self.mnist, prob_mask_bg=self.prob_mask_bg)
+        self.mnist = SegMNIST.load_standard_MNIST(
+            self.mnist_dataset_name, shuffle=True)  # BatchLoader(params, None)
+        self.batch_loader = SegMNIST(
+            self.mnist, prob_mask_bg=self.prob_mask_bg)
 
         # === reshape tops ===
         # since we use a fixed input image size, we can shape the data layer
@@ -58,7 +61,8 @@ class SegMNIST2x2LayerSync(caffe.Layer):
         top[1].reshape(self.batch_size, 10, 1, 1)
         if len(top) > 2:
             top[2].reshape(
-                self.batch_size, 1, params['im_shape'][0], params['im_shape'][1])
+                self.batch_size, 1,
+                params['im_shape'][0], params['im_shape'][1])
 
         print_info("SegMNIST2x2LayerSync", params)
 
@@ -66,11 +70,38 @@ class SegMNIST2x2LayerSync(caffe.Layer):
         """
         Load data.
         """
-        (img_data, cls_label, seg_label) = self.batch_loader.create_batch(self.batch_size)
+        (img_data, cls_label, seg_label) = (
+            self.batch_loader.create_batch(self.batch_size))
         top[0].data[...] = img_data
-        top[1].data[...] = cls_label
-        if len(top) > 2:
-            top[2].data[...] = seg_label
+        if len(top) == 2:
+            # if there is no seg-label, cls_label should encode all classes
+            top[1].data[...] = cls_label
+        else:
+            assert len(top) > 2
+
+            top[1].data.fill(0)
+
+            # set default values to be background
+            # (used for the digits with other labels)
+            top[2].data.fill(0)
+
+            # for each example in batch
+            for n in range(cls_label.shape[0]):
+                # get indices (==labels) of classes that are in image
+                labels = np.flatnonzero(cls_label[n])
+
+                # randomly pick one of the labels
+                lbl = random.sample(labels, 1)[0]
+                top[1].data[n, lbl, 0, 0] = 1
+
+                # retain masked out regions
+                # (if mask_bg, this includes the original background)
+                top[2].data[n, 0][seg_label[n, 0] == 255] = 255
+
+                # set current label to foreground
+                ind0 = seg_label[n, 0]==255
+                ind = seg_label[n, 0]==(lbl + 1)
+                top[2].data[n, 0][seg_label[n, 0] == (lbl + 1)] = 1
 
     def reshape(self, bottom, top):
         """
