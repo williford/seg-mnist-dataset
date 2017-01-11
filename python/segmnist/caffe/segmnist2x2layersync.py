@@ -37,7 +37,6 @@ class SegMNIST2x2LayerSync(caffe.Layer):
         # Check the parameters for validity.
         check_params(params)
 
-        # store input as class variables
         self.batch_size = params['batch_size']
 
         # ex. mnist-training or mnist-validation
@@ -51,6 +50,15 @@ class SegMNIST2x2LayerSync(caffe.Layer):
             self.mnist_dataset_name, shuffle=True)  # BatchLoader(params, None)
         self.batch_loader = SegMNIST(
             self.mnist, prob_mask_bg=self.prob_mask_bg)
+
+        if 'digit_positioning' in params.keys():
+            self.batch_loader.set_generate_method(params['digit_positioning'])
+
+        if 'max_digits' in params.keys():
+            self.batch_loader.set_max_digits(params['max_digits'])
+
+        if 'nchannels' in params.keys():
+            self.batch_loader.set_nchannels(params['nchannels'])
 
         # === reshape tops ===
         # since we use a fixed input image size, we can shape the data layer
@@ -124,7 +132,7 @@ def check_params(params):
     assert 'mnist_dataset' in params.keys(
     ), 'Params must include mnist_dataset (mnist-training, mnist-validation).'
 
-    required = ['batch_size', 'im_shape']
+    required = ['batch_size', 'im_shape', 'prob_mask_bg']
     for r in required:
         assert r in params.keys(), 'Params must include {}'.format(r)
 

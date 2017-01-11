@@ -13,6 +13,7 @@ import pdb
 import h5py
 from . import generator as gen
 from generator import generate_textured_grid
+from generator import generate_textured_image
 
 
 def mkdirs(path):
@@ -121,8 +122,8 @@ def generate_segmnist_2x2_all_training_images(cells_with_num, mask_bg=False):
         generate_segmnist_2x2_x_images(dataset=mnist_trn,
                                        output_dir=output_dir,
                                        mode='trn',
-                                       num_examples=50 * 1000,
-                                       # num_examples=50,
+                                       #num_examples=50 * 1000,
+                                       num_examples=50,
                                        cells_with_num=cells_with_num,
                                        mask_bg=mask_bg,
                                        seed_offset=0))
@@ -131,8 +132,8 @@ def generate_segmnist_2x2_all_training_images(cells_with_num, mask_bg=False):
         generate_segmnist_2x2_x_images(dataset=mnist_val,
                                        output_dir=output_dir,
                                        mode='val',
-                                       num_examples=10 * 1000,
-                                       # num_examples=10,
+                                       # num_examples=10 * 1000,
+                                       num_examples=10,
                                        cells_with_num=cells_with_num,
                                        mask_bg=mask_bg,
                                        seed_offset=50 * 1000))
@@ -173,8 +174,10 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
     for stimulus_number in range(num_examples):
         np.random.seed(stimulus_number + seed_offset)
         grid = np.array(grid_arrangements.next(), dtype=np.bool).reshape(2, 2)
+        # (new_data, new_seg_label, labels) = (
+        #     generate_textured_grid(mnist_iter, grid, bgmask=mask_bg))
         (new_data, new_seg_label, labels) = (
-            generate_textured_grid(mnist_iter, grid, bgmask=mask_bg))
+            generate_textured_image(mnist_iter, grid, bgmask=mask_bg))
 
         (group, group_remainder) = divmod(stimulus_number, 1000)
         if group_remainder == 0:
@@ -209,7 +212,13 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
         stimulus_number += 1
 
         with h5py.File(fn_hdf5_cls, 'w') as f:
-            f['data'] = new_data.reshape((1, 1, 56, 56))
+            if new_data.ndim == 3:
+                new_shape = (1,) + new_data.shape
+            else:
+                new_shape = (1,1) + new_data.shape
+
+            f['data'] = new_data.reshape(new_shape)
+
             # sparse but can contain multiple labels
             sparse_labels = np.zeros(10, np.uint8)
             for lbl in set(labels):
@@ -240,7 +249,12 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
                 lbl_index)
 
             with h5py.File(fn_hdf5_seg, 'w') as f:
-                f['data'] = new_data.reshape((1, 1, 56, 56))
+                if new_data.ndim == 3:
+                    new_shape = (1,) + new_data.shape
+                else:
+                    new_shape = (1,1) + new_data.shape
+
+                f['data'] = new_data.reshape(new_shape)
                 f['cls-label'] = one_hot_label.reshape((1, 10, 1, 1))
 
                 # set default values to be background

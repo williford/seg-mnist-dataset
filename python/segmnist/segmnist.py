@@ -29,6 +29,22 @@ class SegMNIST(object):
         self._gridH = gridH
         self._gridW = gridW
 
+        self._generate = generator.generate_textured_grid
+        self._nchannels = 1
+
+    def set_max_digits(self, max_digits):
+        self._max_cells_with_digits = max_digits
+
+    def set_nchannels(self, nchannels):
+        self._nchannels = nchannels
+
+    def set_generate_method(self, position):
+        if position == "random":
+            self._generate = generator.generate_textured_image
+        else:
+            assert position == "grid"
+            self._generate = generator.generate_textured_grid
+
     @staticmethod
     def load_standard_MNIST(name, shuffle, path=None):
         if path is None:
@@ -60,7 +76,7 @@ class SegMNIST(object):
         appears in image.
     """
     def create_batch(self, batch_size):
-        img_data = np.zeros((batch_size, 1,
+        img_data = np.zeros((batch_size, self._nchannels,
                              28 * self._gridH,
                              28 * self._gridW), dtype=np.uint8)
         seg_label = np.zeros((batch_size, 1,
@@ -76,10 +92,12 @@ class SegMNIST(object):
                 [False] * (self._gridH * self._gridW - ndigits))
             grid = grid.reshape(self._gridH, self._gridW)
 
-            (new_data, new_segm, labels) = generator.generate_textured_grid(
+            # generator.generate_textured_grid(
+            (new_data, new_segm, labels) = self._generate(
                 self._mnist_iter,
                 grid,
-                bgmask=random.random() < self._prob_mask_bg)
+                bgmask=random.random() < self._prob_mask_bg,
+                nchannels=self._nchannels)
 
             img_data[n, 0] = new_data
             seg_label[n] = new_segm
