@@ -99,7 +99,11 @@ class SegMNIST(object):
                 bgmask=random.random() < self._prob_mask_bg,
                 nchannels=self._nchannels)
 
-            img_data[n, 0] = new_data
+            if new_data.ndim <= 2:
+                img_data[n, 0] = new_data
+            else:
+                img_data[n] = new_data
+
             seg_label[n] = new_segm
 
             for lbl in labels:
