@@ -14,6 +14,7 @@ import h5py
 from . import generator as gen
 from generator import generate_textured_grid
 from generator import generate_textured_image
+from segmnist import SegMNIST
 
 
 def mkdirs(path):
@@ -112,11 +113,19 @@ def generate_segmnist_2x2_all_training_images(cells_with_num, mask_bg=False):
     else:
         path = os.path.expanduser("~/Data/mnist")
 
-    mnist_trn = loader.MNIST(path, dataset_slice=(0, 5000))
-    mnist_trn.load_standard('training')
+    # mnist_trn = loader.MNIST(path, dataset_slice=(0, 5000))
+    # mnist_trn.load_standard('training')
+    mnist_trn = SegMNIST(
+        mnist = SegMNIST.load_standard_MNIST('mnist-training', shuffle=False),
+        nchannels = 3,
+    )
 
-    mnist_val = loader.MNIST(path, dataset_slice=(5000, 6000))
-    mnist_val.load_standard('training')
+    #mnist_val = loader.MNIST(path, dataset_slice=(5000, 6000))
+    #mnist_val.load_standard('training')
+    mnist_val = SegMNIST(
+        mnist = SegMNIST.load_standard_MNIST('mnist-validation', shuffle=False),
+        nchannels = 3,
+    )
 
     (hclsfiles_trn, hsegfiles_trn) = (
         generate_segmnist_2x2_x_images(dataset=mnist_trn,
@@ -154,7 +163,6 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
         cells_with_num - the number of cells with a number
     """
     assert cells_with_num > 0 and cells_with_num <= 4
-    mnist_iter = dataset.iter(max_iter=float('inf'))
 
     columns = ['image', 'segmentation', 'x1', 'y1', 'x2', 'y2',
                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
@@ -163,7 +171,7 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
     imglbl = []  # image, segmented image, label information
 
     # create iterator that cycles through all permutations of arrangements
-    grid_arrangements = itertools.cycle(
+    grid_arrangements = itertools.cycle(   # TODO: this should be removed
         itertools.permutations(
             [True] * cells_with_num +
             [False] * (4 - cells_with_num)))
@@ -174,10 +182,10 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
     for stimulus_number in range(num_examples):
         np.random.seed(stimulus_number + seed_offset)
         grid = np.array(grid_arrangements.next(), dtype=np.bool).reshape(2, 2)
-        # (new_data, new_seg_label, labels) = (
-        #     generate_textured_grid(mnist_iter, grid, bgmask=mask_bg))
-        (new_data, new_seg_label, labels) = (
-            generate_textured_image(mnist_iter, grid, bgmask=mask_bg))
+        ncells = np.sum(grid)
+        dataset.set_min_digits(ncells)
+        dataset.set_max_digits(ncells)
+        (new_data, cls_label, new_seg_label) = dataset.create_example()
 
         (group, group_remainder) = divmod(stimulus_number, 1000)
         if group_remainder == 0:
@@ -207,7 +215,13 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
             stimulus_number)
         hclsfiles.append(fn_hdf5_cls)
 
-        scipy.misc.imsave(fn_img, new_data)
+        if new_data.shape[0]==1:
+            # imsave is very picky about format of grayscale images
+            img = new_data[0]
+        else:
+            img = new_data.transpose(1, 2, 0)
+
+        scipy.misc.imsave(fn_img, img)
         scipy.misc.imsave(fn_seg, new_seg_label)
         stimulus_number += 1
 
@@ -220,21 +234,21 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
             f['data'] = new_data.reshape(new_shape)
 
             # sparse but can contain multiple labels
-            sparse_labels = np.zeros(10, np.uint8)
-            for lbl in set(labels):
-                sparse_labels[lbl] = 1
+            # sparse_labels = np.zeros(10, np.uint8)
+            # for lbl in set(labels):
+            #     sparse_labels[lbl] = 1
 
-            f['cls-label'] = sparse_labels.reshape((1, 10, 1, 1))
+            f['cls-label'] = cls_label.reshape((1, 10, 1, 1))
 
         example_inf = [fn_img, fn_seg, 0, 0, new_data.shape[0],
                        new_data.shape[1]]
 
-        for (lbl_index, lbl) in enumerate(set(labels)):
-            one_hot_label = np.zeros(10, np.uint8)
-            one_hot_label[lbl] = 1
+        labels = np.arange(10)[np.array(cls_label.flatten(), dtype='bool')]
+        for lbl_index in range(cls_label.size):
+            lbl = cls_label[0, lbl_index]
 
             example_inf1 = list(example_inf)
-            example_inf1.extend(one_hot_label)
+            example_inf1.extend(cls_label.flatten().tolist())
 
             series = pd.Series(example_inf1, index=columns)
             imgseglbl.append(series)
@@ -255,7 +269,7 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
                     new_shape = (1,1) + new_data.shape
 
                 f['data'] = new_data.reshape(new_shape)
-                f['cls-label'] = one_hot_label.reshape((1, 10, 1, 1))
+                f['cls-label'] = cls_label.reshape((1, 10, 1, 1))
 
                 # set default values to be background
                 # (used for the digits with other labels)
@@ -281,6 +295,7 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
             hsegfiles.append(fn_hdf5_seg)
 
         if cells_with_num == 1:
+            assert len(labels)==1  # guaranteed by condition
             label = list(labels)[0]
             data = ["/" + fn_img, label]
             series = pd.Series(data, index=columns_imglbl)

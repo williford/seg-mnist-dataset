@@ -46,19 +46,21 @@ def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
     # potential_means = np.arange(num_means) * (255. / (num_means - 1))
     # np.random.shuffle(potential_means)
 
-    h = mnist_shape[0]
-    w = mnist_shape[1]
-    H = grid.shape[0] * h
-    W = grid.shape[1] * w
+    H = grid.shape[0] * mnist_shape[0]
+    W = grid.shape[1] * mnist_shape[1]
     new_data = random_color_texture(
         (nchannels, H, W),
         mean=np.random.randint(256, size=nchannels),
         var=np.random.gamma(1, 25, size=nchannels))
 
-    new_segm = np.zeros((grid.shape[0] * h, grid.shape[1] * w), dtype=np.uint8)
+    new_segm = np.zeros((H, W), dtype=np.uint8)
     labels = set()
 
     for elem in range(num_elem):
+        scale = random.uniform(0.5, 1.5)
+        h = int(round(scale * mnist_shape[0]))
+        w = int(round(scale * mnist_shape[1]))
+
         # allow digits to be partially outside image
         min_pos_i = - h // 4
         min_pos_j = - w // 4
@@ -66,18 +68,21 @@ def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
         max_pos_j = W - w + w // 4
         offset_i = random.randrange(min_pos_i, max_pos_i)
         offset_j = random.randrange(min_pos_j, max_pos_j)
-        dest_i = range(max(0, offset_i), min(H, offset_i + h))
-        dest_j = range(max(0, offset_j), min(W, offset_j + w))
+        dest_i = np.arange(max(0, offset_i), min(H, offset_i + h))
+        dest_j = np.arange(max(0, offset_j), min(W, offset_j + w))
+        dest_mask = np.zeros(new_segm.shape, dtype='bool')
+        dest_mask[np.ix_(dest_i, dest_j)] = True                    
 
-        label1, data1 = mnist_iter.next()
+        label1, data0 = mnist_iter.next()
         labels.add(label1)
 
+        data1 = scipy.misc.imresize(data0, (h, w), 'bicubic')
 
         # Calculate indices within digit
         digit_offset_i = abs(min(0, offset_i))
         digit_offset_j = abs(min(0, offset_j))
-        src_i = range(digit_offset_i, min(H, offset_i + h) - offset_i)
-        src_j = range(digit_offset_j, min(W, offset_j + w) - offset_j)
+        src_i = np.arange(digit_offset_i, min(H, offset_i + h) - offset_i)
+        src_j = np.arange(digit_offset_j, min(W, offset_j + w) - offset_j)
         digit = data1[np.ix_(src_i, src_j)].astype(dtype=np.float)
 
         digit_texture = random_color_texture(
@@ -94,7 +99,15 @@ def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
         )
 
         # segmentation data
-        new_segm[np.ix_(dest_i, dest_j)][digit > 159] = label1 + 1
+        # trying to do: new_segm[dest_i, :][:, dest_j][digit > 159] = label1 + 1
+        for i in range(len(dest_i)):
+            for j in range(len(dest_j)):
+                if digit[i, j] > 159:
+                    di = dest_i[i]
+                    dj = dest_j[j]
+                    new_segm[[di],[dj]] = label1 + 1
+
+        assert new_segm.max() > 0 or num_elem == 0
 
         # mask out intermediate values
         new_segm[np.ix_(dest_i, dest_j)][

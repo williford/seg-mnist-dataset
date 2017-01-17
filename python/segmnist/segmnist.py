@@ -11,7 +11,9 @@ class SegMNIST(object):
     def __init__(self, mnist, gridH=2, gridW=2,
                  prob_mask_bg=0,
                  min_cells_with_digits=1,
-                 max_cells_with_digits=None):
+                 max_cells_with_digits=None,
+                 position='random',
+                 nchannels=1):
         assert mnist is not None
         self._mnist_iter = mnist.iter()
 
@@ -29,8 +31,11 @@ class SegMNIST(object):
         self._gridH = gridH
         self._gridW = gridW
 
-        self._generate = generator.generate_textured_grid
-        self._nchannels = 1
+        self.set_generate_method(position)
+        self._nchannels = nchannels
+
+    def set_min_digits(self, min_digits):
+        self._min_cells_with_digits = min_digits
 
     def set_max_digits(self, max_digits):
         self._max_cells_with_digits = max_digits
@@ -70,6 +75,15 @@ class SegMNIST(object):
         else:
             raise RuntimeError('Unknown standard MNIST-type dataset: %s' %
                                name)
+
+    """ Return single example with image, class labels, and segmentation labels.
+    """
+    def create_example(self):
+        (img_data, cls_label, seg_label) = self.create_batch(1)
+        img_data = img_data.reshape(img_data.shape[1:])
+        seg_label = seg_label.reshape(seg_label.shape[2:])
+        cls_label = cls_label.reshape(cls_label.shape[:2])
+        return (img_data, cls_label, seg_label)
 
     """ Return batch with images, class labels, and segmentation labels.
         cls_label is a sparse vector with 1 set for every digit that
