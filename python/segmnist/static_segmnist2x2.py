@@ -47,13 +47,19 @@ def generate_segmnist_2x2_classification_images():
 
 def generate_segmnist_2x2_training_images():
 
-    flist = generate_segmnist_2x2_training_images_bgmask(mask_bg=False)
-    flist_bgmask = generate_segmnist_2x2_training_images_bgmask(mask_bg=True)
+    output_dir = 'data'
+    mkdirs("%s" % (output_dir))
+
+    flist = generate_segmnist_2x2_training_images_bgmask(
+        mask_bg=False, output_dir=output_dir)
+    flist_bgmask = generate_segmnist_2x2_training_images_bgmask(
+        mask_bg=True, output_dir=output_dir)
 
     for (f1, f2) in zip(flist, flist_bgmask):
         task = f1[0]
         mode = f1[1]
-        with open("%s-segmnist-2x2-any.%s.txt" % (task, mode), 'w') as f:
+        with open("%s/%s-segmnist-2x2-any.%s.txt" %
+                  (output_dir, task, mode), 'w') as f:
             for line in f1[2]:
                 f.write(line + '\n')
             if task != 'classification' or flist_bgmask is None:
@@ -61,14 +67,15 @@ def generate_segmnist_2x2_training_images():
                     f.write(line + '\n')
 
 
-def generate_segmnist_2x2_training_images_bgmask(mask_bg):
+def generate_segmnist_2x2_training_images_bgmask(mask_bg, output_dir):
     # generate_segmnist_2x2_all_training_images(mask_bg=True)
     # generate_segmnist_2x2_1_training_images()
     filelists = list()
     for ncells in range(1, 5):
         filelists.append(
             generate_segmnist_2x2_all_training_images(cells_with_num=ncells,
-                                                      mask_bg=mask_bg))
+                                                      mask_bg=mask_bg,
+                                                      output_dir=output_dir))
 
     if mask_bg:
         mask_bg_str = 'with_bgmask'
@@ -90,7 +97,7 @@ def generate_segmnist_2x2_training_images_bgmask(mask_bg):
          mask_bg_str)]
 
     for (task, mode, filenames, mask_bg_str) in filelists2:
-        fn = "%s-segmnist-2x2-any_%s.%s.txt" % (task, mask_bg_str, mode)
+        fn = "%s/%s-segmnist-2x2-any_%s.%s.txt" % (output_dir, task, mask_bg_str, mode)
         print fn
         with open(fn, 'w') as f:
             for line in filenames:
@@ -99,11 +106,15 @@ def generate_segmnist_2x2_training_images_bgmask(mask_bg):
     return filelists2
 
 
-def generate_segmnist_2x2_all_training_images(cells_with_num, mask_bg=False):
+def generate_segmnist_2x2_all_training_images(cells_with_num,
+                                              mask_bg=False,
+                                              output_dir='.'):
     if not mask_bg:
-        output_dir = 'seg-mnist-2x2-%d' % cells_with_num
+        prefix = 'seg-mnist-2x2-%d' % cells_with_num
+        output_dir = os.path.join(output_dir, prefix)
     else:
-        output_dir = 'seg-mnist-2x2-%d-bgmask' % cells_with_num
+        prefix = 'seg-mnist-2x2-%d-bgmask' % cells_with_num
+        output_dir = os.path.join(output_dir, prefix)
 
     for subfolder in ['trn', 'val', 'tst']:
         mkdirs("%s/%s" % (output_dir, subfolder))
@@ -129,6 +140,7 @@ def generate_segmnist_2x2_all_training_images(cells_with_num, mask_bg=False):
 
     (hclsfiles_trn, hsegfiles_trn) = (
         generate_segmnist_2x2_x_images(dataset=mnist_trn,
+                                       prefix=prefix,
                                        output_dir=output_dir,
                                        mode='trn',
                                        #num_examples=50 * 1000,
@@ -139,6 +151,7 @@ def generate_segmnist_2x2_all_training_images(cells_with_num, mask_bg=False):
 
     (hclsfiles_val, hsegfiles_val) = (
         generate_segmnist_2x2_x_images(dataset=mnist_val,
+                                       prefix=prefix,
                                        output_dir=output_dir,
                                        mode='val',
                                        # num_examples=10 * 1000,
@@ -154,7 +167,7 @@ def generate_segmnist_2x2_all_training_images(cells_with_num, mask_bg=False):
     )
 
 
-def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
+def generate_segmnist_2x2_x_images(dataset, prefix, output_dir, mode, num_examples,
                                    cells_with_num, mask_bg=False,
                                    seed_offset=0):
     """ Generates 2x2 grid where some cells contain an MNIST number.
@@ -196,21 +209,21 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
             output_dir,
             mode,
             group,
-            output_dir,
+            prefix,
             mode,
             stimulus_number)
         fn_seg = "%s/%s/%d/%s_%s_%07d-segm.png" % (
             output_dir,
             mode,
             group,
-            output_dir,
+            prefix,
             mode,
             stimulus_number)
         fn_hdf5_cls = "%s/hdf5/%s/%d/%s_%s_%07d.cls.hdf5" % (
             output_dir,
             mode,
             group,
-            output_dir,
+            prefix,
             mode,
             stimulus_number)
         hclsfiles.append(fn_hdf5_cls)
@@ -257,7 +270,7 @@ def generate_segmnist_2x2_x_images(dataset, output_dir, mode, num_examples,
                 output_dir,
                 mode,
                 group,
-                output_dir,
+                prefix,
                 mode,
                 stimulus_number,
                 lbl_index)

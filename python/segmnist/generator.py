@@ -68,10 +68,10 @@ def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
         max_pos_j = W - w + w // 4
         offset_i = random.randrange(min_pos_i, max_pos_i)
         offset_j = random.randrange(min_pos_j, max_pos_j)
-        dest_i = np.arange(max(0, offset_i), min(H, offset_i + h))
-        dest_j = np.arange(max(0, offset_j), min(W, offset_j + w))
-        dest_mask = np.zeros(new_segm.shape, dtype='bool')
-        dest_mask[np.ix_(dest_i, dest_j)] = True                    
+
+        slice_chan = slice(nchannels)
+        slice_dest_i = slice(max(0, offset_i), min(H, offset_i + h))
+        slice_dest_j = slice(max(0, offset_j), min(W, offset_j + w))
 
         label1, data0 = mnist_iter.next()
         labels.add(label1)
@@ -81,42 +81,35 @@ def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
         # Calculate indices within digit
         digit_offset_i = abs(min(0, offset_i))
         digit_offset_j = abs(min(0, offset_j))
-        src_i = np.arange(digit_offset_i, min(H, offset_i + h) - offset_i)
-        src_j = np.arange(digit_offset_j, min(W, offset_j + w) - offset_j)
-        digit = data1[np.ix_(src_i, src_j)].astype(dtype=np.float)
+        slice_src_i = slice(digit_offset_i, min(H, offset_i + h) - offset_i)
+        slice_src_j = slice(digit_offset_j, min(W, offset_j + w) - offset_j)
+        digit = data1[slice_src_i, slice_src_j].astype(dtype=np.float)
 
         digit_texture = random_color_texture(
             (nchannels, h, w),
             mean=np.random.randint(256, size=nchannels),
             var=np.random.gamma(1, 25, size=nchannels)
         )
-        digit_texture = digit_texture[np.ix_(range(nchannels), src_i, src_j)]
+        digit_texture = digit_texture[slice_chan, slice_src_i, slice_src_j]
 
-        new_data[np.ix_(range(nchannels), dest_i, dest_j)] = (
+        new_data[slice_chan, slice_dest_i, slice_dest_j] = (
             np.multiply(digit / 255.0, digit_texture) +
             np.multiply((255.0 - digit) / 255.0,
-                        new_data[np.ix_(range(nchannels), dest_i, dest_j)])
+                        new_data[slice_chan, slice_dest_i, slice_dest_j])
         )
 
         # segmentation data
-        # trying to do: new_segm[dest_i, :][:, dest_j][digit > 159] = label1 + 1
-        for i in range(len(dest_i)):
-            for j in range(len(dest_j)):
-                if digit[i, j] > 159:
-                    di = dest_i[i]
-                    dj = dest_j[j]
-                    new_segm[[di],[dj]] = label1 + 1
-
+        new_segm[slice_dest_i, slice_dest_j][digit > 159] = label1 + 1
         assert new_segm.max() > 0 or num_elem == 0
 
         # mask out intermediate values
-        new_segm[np.ix_(dest_i, dest_j)][
+        new_segm[slice_dest_i, slice_dest_j][
             np.logical_and(digit > 95,
                            digit <= 159)] = 255
 
         # mask out real background (not any numbers) - if desired
         if bgmask:
-            new_segm[np.ix_(dest_i, dest_j)][digit == 0] = 255
+            new_segm[slice_dest_i, slice_dest_j][digit == 0] = 255
     new_data = new_data.astype(np.uint8)
     assert new_data.dtype == np.uint8
     return (new_data, new_segm, labels)
