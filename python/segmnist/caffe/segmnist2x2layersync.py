@@ -72,9 +72,12 @@ class SegMNIST2x2LayerSync(caffe.Layer):
         # Note the 10 channels (for the 10 digits).
         top[1].reshape(self.batch_size, 10, 1, 1)
         if len(top) > 2:
-            top[2].reshape(
-                self.batch_size, 1,
-                params['im_shape'][0], params['im_shape'][1])
+            if len( params['im_shape'] ) == 2:
+                top[2].reshape(
+                    self.batch_size, 1, params['im_shape'][0], params['im_shape'][1])
+            else:
+                top[2].reshape(
+                    self.batch_size, 1, *params['im_shape'][1:])
 
         print_info("SegMNIST2x2LayerSync", params)
 
