@@ -39,9 +39,11 @@ def random_texture(shape,
 
 # Generate image where digits can appear anywhere, even overlapping.
 def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
-                           bgmask=False, nchannels=1):
+                            bgmask=False, nchannels=1,
+                            scale_range=(1,1)):
 
     num_elem = np.sum(grid)
+    assert num_elem <= 3
     # num_means = 10
     # potential_means = np.arange(num_means) * (255. / (num_means - 1))
     # np.random.shuffle(potential_means)
@@ -53,11 +55,14 @@ def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
         mean=np.random.randint(256, size=nchannels),
         var=np.random.gamma(1, 25, size=nchannels))
 
-    new_segm = np.zeros((H, W), dtype=np.uint8)
+    if bgmask:
+        new_segm = np.ones((H, W), dtype=np.uint8)*255
+    else:
+        new_segm = np.zeros((H, W), dtype=np.uint8)
     labels = set()
 
     for elem in range(num_elem):
-        scale = random.uniform(0.5, 1.5)
+        scale = random.uniform(scale_range[0], scale_range[1])
         h = int(round(scale * mnist_shape[0]))
         w = int(round(scale * mnist_shape[1]))
 
@@ -108,8 +113,9 @@ def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
                            digit <= 159)] = 255
 
         # mask out real background (not any numbers) - if desired
-        if bgmask:
-            new_segm[slice_dest_i, slice_dest_j][digit == 0] = 255
+        #if bgmask:
+        #    new_segm[slice_dest_i, slice_dest_j][digit == 0] = 255
+
     new_data = new_data.astype(np.uint8)
     assert new_data.dtype == np.uint8
     return (new_data, new_segm, labels)

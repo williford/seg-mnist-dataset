@@ -9,7 +9,7 @@ import pdb
 
 class SegMNIST(object):
     def __init__(self, mnist, gridH=2, gridW=2,
-                 prob_mask_bg=0,
+                 prob_mask_bg=None,
                  min_cells_with_digits=1,
                  max_cells_with_digits=None,
                  position='random',
@@ -17,6 +17,7 @@ class SegMNIST(object):
         assert mnist is not None
         self._mnist_iter = mnist.iter()
 
+        assert prob_mask_bg <= 1.0, "prob_mask_bg should be set from 0 to 1."
         self._prob_mask_bg = prob_mask_bg
 
         self._min_cells_with_digits = min_cells_with_digits
@@ -34,6 +35,8 @@ class SegMNIST(object):
         self.set_generate_method(position)
         self._nchannels = nchannels
 
+        self._scale_range = (1.0, 1.0)
+
     def set_min_digits(self, min_digits):
         self._min_cells_with_digits = min_digits
 
@@ -43,12 +46,18 @@ class SegMNIST(object):
     def set_nchannels(self, nchannels):
         self._nchannels = nchannels
 
+    def set_scale_range(self, scale_range):
+        self._scale_range = scale_range
+
     def set_generate_method(self, position):
         if position == "random":
             self._generate = generator.generate_textured_image
         else:
             assert position == "grid"
             self._generate = generator.generate_textured_grid
+
+    def set_prob_mask_bg(self, prob_mask_bg):
+        self._prob_mask_bg = prob_mask_bg
 
     @staticmethod
     def load_standard_MNIST(name, shuffle, path=None):
@@ -106,12 +115,14 @@ class SegMNIST(object):
                 [False] * (self._gridH * self._gridW - ndigits))
             grid = grid.reshape(self._gridH, self._gridW)
 
+            assert self._prob_mask_bg is not None, "Probability mask background (prob_mask_bg) not set!"
             # generator.generate_textured_grid(
             (new_data, new_segm, labels) = self._generate(
                 self._mnist_iter,
                 grid,
                 bgmask=random.random() < self._prob_mask_bg,
-                nchannels=self._nchannels)
+                nchannels=self._nchannels,
+                scale_range=self._scale_range)
 
             if new_data.ndim <= 2:
                 img_data[n, 0] = new_data

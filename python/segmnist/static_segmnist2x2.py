@@ -71,7 +71,7 @@ def generate_segmnist_2x2_training_images_bgmask(mask_bg, output_dir):
     # generate_segmnist_2x2_all_training_images(mask_bg=True)
     # generate_segmnist_2x2_1_training_images()
     filelists = list()
-    for ncells in range(1, 5):
+    for ncells in range(1, 4):  # 1-3
         filelists.append(
             generate_segmnist_2x2_all_training_images(cells_with_num=ncells,
                                                       mask_bg=mask_bg,
@@ -124,11 +124,17 @@ def generate_segmnist_2x2_all_training_images(cells_with_num,
     else:
         path = os.path.expanduser("~/Data/mnist")
 
+    if mask_bg:
+        prob_mask_bg = 1
+    else:
+        prob_mask_bg = 0
+
     # mnist_trn = loader.MNIST(path, dataset_slice=(0, 5000))
     # mnist_trn.load_standard('training')
     mnist_trn = SegMNIST(
         mnist = SegMNIST.load_standard_MNIST('mnist-training', shuffle=False),
         nchannels = 3,
+        prob_mask_bg = prob_mask_bg,
     )
 
     #mnist_val = loader.MNIST(path, dataset_slice=(5000, 6000))
@@ -136,6 +142,7 @@ def generate_segmnist_2x2_all_training_images(cells_with_num,
     mnist_val = SegMNIST(
         mnist = SegMNIST.load_standard_MNIST('mnist-validation', shuffle=False),
         nchannels = 3,
+        prob_mask_bg = prob_mask_bg,
     )
 
     (hclsfiles_trn, hsegfiles_trn) = (

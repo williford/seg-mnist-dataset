@@ -5,6 +5,7 @@ import pickle
 import scipy.misc
 import skimage.io
 import caffe
+import ast
 
 import numpy as np
 import os.path as osp
@@ -32,7 +33,7 @@ class SegMNIST2x2LayerSync(caffe.Layer):
         # === Read input parameters ===
 
         # params is a python dictionary with layer parameters.
-        params = eval(self.param_str)
+        params = ast.literal_eval(self.param_str)
 
         # Check the parameters for validity.
         check_params(params)
@@ -59,6 +60,11 @@ class SegMNIST2x2LayerSync(caffe.Layer):
 
         if 'nchannels' in params.keys():
             self.batch_loader.set_nchannels(params['nchannels'])
+
+        if 'scale_range' in params.keys():
+            self.batch_loader.set_scale_range(params['scale_range'])
+        else:
+            self.batch_loader.set_scale_range((0.5, 1.5))
 
         # === reshape tops ===
         # since we use a fixed input image size, we can shape the data layer
