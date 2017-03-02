@@ -43,7 +43,7 @@ def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
                             scale_range=(1,1)):
 
     num_elem = np.sum(grid)
-    assert num_elem <= 3
+    # assert num_elem <= 3
     # num_means = 10
     # potential_means = np.arange(num_means) * (255. / (num_means - 1))
     # np.random.shuffle(potential_means)
@@ -105,7 +105,9 @@ def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
 
         # segmentation data
         new_segm[slice_dest_i, slice_dest_j][digit > 159] = label1 + 1
-        assert new_segm.max() > 0 or num_elem == 0
+        assert new_segm.max() > 0 or num_elem == 0, (
+            "Segmentation data has maximum value of %f, even though it has %d elements." %
+            (new_segm.max(), num_elem)
 
         # mask out intermediate values
         new_segm[slice_dest_i, slice_dest_j][
