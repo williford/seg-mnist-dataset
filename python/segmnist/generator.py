@@ -107,7 +107,7 @@ def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
         new_segm[slice_dest_i, slice_dest_j][digit > 159] = label1 + 1
         assert new_segm.max() > 0 or num_elem == 0, (
             "Segmentation data has maximum value of %f, even though it has %d elements." %
-            (new_segm.max(), num_elem)
+            (new_segm.max(), num_elem))
 
         # mask out intermediate values
         new_segm[slice_dest_i, slice_dest_j][
