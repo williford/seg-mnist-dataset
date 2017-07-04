@@ -1,7 +1,7 @@
 import random
 import itertools
 from . import loader
-from . import generator
+from . import texture_generator
 import os
 import numpy as np
 import pdb
@@ -51,10 +51,10 @@ class SegMNIST(object):
 
     def set_generate_method(self, position):
         if position == "random":
-            self._generate = generator.generate_textured_image
+            self._generate = texture_generator.generate_textured_image
         else:
             assert position == "grid"
-            self._generate = generator.generate_textured_grid
+            self._generate = texture_generator.generate_textured_grid
 
     def set_prob_mask_bg(self, prob_mask_bg):
         self._prob_mask_bg = prob_mask_bg
@@ -116,7 +116,7 @@ class SegMNIST(object):
             grid = grid.reshape(self._gridH, self._gridW)
 
             assert self._prob_mask_bg is not None, "Probability mask background (prob_mask_bg) not set!"
-            # generator.generate_textured_grid(
+            # texture_generator.generate_textured_grid(
             (new_data, new_segm, labels) = self._generate(
                 self._mnist_iter,
                 grid,

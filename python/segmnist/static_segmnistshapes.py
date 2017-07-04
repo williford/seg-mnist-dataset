@@ -12,6 +12,7 @@ import pdb
 
 import h5py
 from segmnist import SegMNIST
+from segmnistshapes import SegMNISTShapes
 
 
 def mkdirs(path):
@@ -27,35 +28,20 @@ def mkdirs(path):
             raise
 
 
-def generate_segmnist_2x2_classification_images():
-
-    flist = generate_segmnist_2x2_bgmask(mask_bg=False)
-
-    for f1 in flist:
-        task = f1[0]
-        mode = f1[1]
-        if task != 'classification':
-            continue
-
-        with open("%s-segmnist-2x2-any.%s.txt" % (task, mode), 'w') as f:
-            for line in f1[2]:
-                f.write(line + '\n')
-
-
-def generate_segmnist_2x2():
+def generate_segmnist_shapes():
 
     output_dir = 'data'
     mkdirs("%s" % (output_dir))
 
-    flist = generate_segmnist_2x2_bgmask(
+    flist = generate_segmnist_shapes_bgmask(
         mask_bg=False, output_dir=output_dir)
-    flist_bgmask = generate_segmnist_2x2_bgmask(
-        mask_bg=True, output_dir=output_dir)
+    flist_bgmask = generate_segmnist_shapes_bgmask(
+        mask_bg=0.85, output_dir=output_dir)
 
     for (f1, f2) in zip(flist, flist_bgmask):
         task = f1[0]
         mode = f1[1]
-        with open("%s/%s-segmnist-2x2-any.%s.txt" %
+        with open("%s/%s-segmnist-shapes-any.%s.txt" %
                   (output_dir, task, mode), 'w') as f:
             for line in f1[2]:
                 f.write(line + '\n')
@@ -64,13 +50,13 @@ def generate_segmnist_2x2():
                     f.write(line + '\n')
 
 
-def generate_segmnist_2x2_bgmask(mask_bg, output_dir):
-    # generate_segmnist_2x2_all(mask_bg=True)
-    # generate_segmnist_2x2_1()
+def generate_segmnist_shapes_bgmask(mask_bg, output_dir):
+    # generate_segmnist_shapes_all(mask_bg=True)
+    # generate_segmnist_shapes_1()
     filelists = list()
     for ncells in range(1, 4):  # 1-3
         filelists.append(
-            generate_segmnist_2x2_all(cells_with_num=ncells,
+            generate_segmnist_shapes_all(cells_with_num=ncells,
                                                       mask_bg=mask_bg,
                                                       output_dir=output_dir))
 
@@ -94,7 +80,7 @@ def generate_segmnist_2x2_bgmask(mask_bg, output_dir):
          mask_bg_str)]
 
     for (task, mode, filenames, mask_bg_str) in filelists2:
-        fn = "%s/%s-segmnist-2x2-any_%s.%s.txt" % (output_dir, task, mask_bg_str, mode)
+        fn = "%s/%s-segmnist-shapes-any_%s.%s.txt" % (output_dir, task, mask_bg_str, mode)
         print fn
         with open(fn, 'w') as f:
             for line in filenames:
@@ -103,14 +89,14 @@ def generate_segmnist_2x2_bgmask(mask_bg, output_dir):
     return filelists2
 
 
-def generate_segmnist_2x2_all(cells_with_num,
+def generate_segmnist_shapes_all(cells_with_num,
                                               mask_bg=False,
                                               output_dir='.'):
     if not mask_bg:
-        prefix = 'seg-mnist-2x2-%d' % cells_with_num
+        prefix = 'seg-mnist-shapes-%d' % cells_with_num
         output_dir = os.path.join(output_dir, prefix)
     else:
-        prefix = 'seg-mnist-2x2-%d-bgmask' % cells_with_num
+        prefix = 'seg-mnist-shapes-%d-bgmask' % cells_with_num
         output_dir = os.path.join(output_dir, prefix)
 
     for subfolder in ['trn', 'val', 'tst']:
@@ -126,24 +112,28 @@ def generate_segmnist_2x2_all(cells_with_num,
     else:
         prob_mask_bg = 0
 
+    positioning='grid'
+
     # mnist_trn = loader.MNIST(path, dataset_slice=(0, 5000))
     # mnist_trn.load_standard('training')
-    mnist_trn = SegMNIST(
+    mnist_trn = SegMNISTShapes(
         mnist = SegMNIST.load_standard_MNIST('mnist-training', shuffle=False),
-        nchannels = 3,
+        imshape = (3, 28*2, 28*2),
         prob_mask_bg = prob_mask_bg,
+        positioning = positioning,
     )
 
     #mnist_val = loader.MNIST(path, dataset_slice=(5000, 6000))
     #mnist_val.load_standard('training')
-    mnist_val = SegMNIST(
+    mnist_val = SegMNISTShapes(
         mnist = SegMNIST.load_standard_MNIST('mnist-validation', shuffle=False),
-        nchannels = 3,
+        imshape = (3, 28*2, 28*2),
         prob_mask_bg = prob_mask_bg,
+        positioning = positioning,
     )
 
     (hclsfiles_trn, hsegfiles_trn) = (
-        generate_segmnist_2x2_x_images(dataset=mnist_trn,
+        generate_segmnist_shapes_x_images(dataset=mnist_trn,
                                        prefix=prefix,
                                        output_dir=output_dir,
                                        mode='trn',
@@ -154,12 +144,12 @@ def generate_segmnist_2x2_all(cells_with_num,
                                        seed_offset=0))
 
     (hclsfiles_val, hsegfiles_val) = (
-        generate_segmnist_2x2_x_images(dataset=mnist_val,
+        generate_segmnist_shapes_x_images(dataset=mnist_val,
                                        prefix=prefix,
                                        output_dir=output_dir,
                                        mode='val',
                                        # num_examples=10 * 1000,
-                                       num_examples=10,
+                                       num_examples=50,
                                        cells_with_num=cells_with_num,
                                        mask_bg=mask_bg,
                                        seed_offset=50 * 1000))
@@ -171,18 +161,19 @@ def generate_segmnist_2x2_all(cells_with_num,
     )
 
 
-def generate_segmnist_2x2_x_images(dataset, prefix, output_dir, mode, num_examples,
+def generate_segmnist_shapes_x_images(dataset, prefix, output_dir, mode, num_examples,
                                    cells_with_num, mask_bg=False,
                                    seed_offset=0):
-    """ Generates 2x2 grid where some cells contain an MNIST number.
+    """ Generates shapes grid where some cells contain an MNIST number.
 
-        dataset - source MNIST dataset loader
+        dataset - source dataset loader / creater
         cells_with_num - the number of cells with a number
     """
     assert cells_with_num > 0 and cells_with_num <= 4
 
-    columns = ['image', 'segmentation', 'x1', 'y1', 'x2', 'y2',
-               '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    columns = ['image', 'segmentation', 'x1', 'y1', 'x2', 'y2']
+    columns.extend(dataset.class_names())
+    #           '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     columns_imglbl = ['image', 'label']
     imgseglbl = []  # image, segmented image, label information
     imglbl = []  # image, segmented image, label information
@@ -255,12 +246,14 @@ def generate_segmnist_2x2_x_images(dataset, prefix, output_dir, mode, num_exampl
             # for lbl in set(labels):
             #     sparse_labels[lbl] = 1
 
-            f['cls-label'] = cls_label.reshape((1, 10, 1, 1))
+            f['cls-label'] = cls_label[:, :, np.newaxis, np.newaxis]
 
         example_inf = [fn_img, fn_seg, 0, 0, new_data.shape[0],
                        new_data.shape[1]]
 
-        labels = np.arange(10)[np.array(cls_label.flatten(), dtype='bool')]
+        labels = np.arange(cls_label.shape[1])[
+            np.array(cls_label.flatten(), dtype='bool')]
+
         for lbl_index in range(cls_label.size):
             lbl = cls_label[0, lbl_index]
 
@@ -286,7 +279,7 @@ def generate_segmnist_2x2_x_images(dataset, prefix, output_dir, mode, num_exampl
                     new_shape = (1,1) + new_data.shape
 
                 f['data'] = new_data.reshape(new_shape)
-                f['cls-label'] = cls_label.reshape((1, 10, 1, 1))
+                f['cls-label'] = cls_label[:, :, np.newaxis, np.newaxis]
 
                 # set default values to be background
                 # (used for the digits with other labels)

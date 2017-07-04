@@ -114,10 +114,6 @@ def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
             np.logical_and(digit > 95,
                            digit <= 159)] = 255
 
-        # mask out real background (not any numbers) - if desired
-        #if bgmask:
-        #    new_segm[slice_dest_i, slice_dest_j][digit == 0] = 255
-
     new_data = new_data.astype(np.uint8)
     assert new_data.dtype == np.uint8
     return (new_data, new_segm, labels)
@@ -125,18 +121,23 @@ def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
 
 
 def generate_textured_grid(mnist_iter, grid, mnist_shape=(28, 28),
-                           bgmask=False):
-
+                           bgmask=False, nchannels=1,
+                           scale_range=(1,1)):
     num_means = 10
     potential_means = np.arange(num_means) * (255. / (num_means - 1))
     np.random.shuffle(potential_means)
 
     h = mnist_shape[0]
     w = mnist_shape[1]
-    new_data = random_texture((grid.shape[0] * h, grid.shape[1] * w), mean=potential_means[-1])
     potential_means = potential_means[0:-1]
     new_segm = np.zeros((grid.shape[0] * h, grid.shape[1] * w), dtype=np.uint8)
     labels = set()
+
+    # new_data = random_texture((grid.shape[0] * h, grid.shape[1] * w), mean=potential_means[-1])
+    new_data = random_color_texture(
+        (nchannels, H, W),
+        mean=np.random.randint(256, size=nchannels),
+        var=np.random.gamma(1, 25, size=nchannels))
 
     for j in range(grid.shape[1]): # column
         for i in range(grid.shape[0]):  # row
@@ -153,7 +154,14 @@ def generate_textured_grid(mnist_iter, grid, mnist_shape=(28, 28),
             label1, data1 = mnist_iter.next()
             data1 = data1.astype(dtype=np.float)
             labels.add(label1)
-            digit_texture = random_texture((h, w), mean=potential_means[-1])
+
+            #digit_texture = random_texture((h, w), mean=potential_means[-1])
+            digit_texture = random_color_texture(
+                (nchannels, h, w),
+                mean=np.random.randint(256, size=nchannels),
+                var=np.random.gamma(1, 25, size=nchannels)
+            )
+            digit_texture = digit_texture[slice_chan, slice_src_i, slice_src_j]
             potential_means = potential_means[0:-1]
 
             new_data[offset_i:offset_i + h,
