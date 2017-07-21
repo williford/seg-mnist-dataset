@@ -170,7 +170,7 @@ class SegMNISTShapes(object):
         self._imshape = imshape
 
         self._generate_digit = mnist_generator.generate_digit
-        
+
         if positioning == 'random':
             self._positioning = mnist_generator.RandomPositioning()
         elif positioning == 'grid':

@@ -60,7 +60,12 @@ class SegMNISTShapesLayerSync(caffe.Layer):
             self.positioning = 'random'
 
         if 'nchannels' in params.keys():
-            self.imshape.prepend(params['nchannels'])
+            raise NotImplementedError(
+                "Using nchannels is currently not "
+                "implemented. Use im_shape instead.")
+
+            # assumes imshape is a tuple
+            self.imshape = (params['nchannels'],) + self.imshape
 
         # Create a batch loader to load the images.
         self.mnist = SegMNIST.load_standard_MNIST(
@@ -76,14 +81,15 @@ class SegMNISTShapesLayerSync(caffe.Layer):
             self.mnist,
             imshape=self.imshape,
             prob_mask_bg=self.prob_mask_bg,
-            positioning=self.positioning
+            positioning=self.positioning,
+            shapes=shapes
         )
 
         if 'max_digits' in params.keys():
             self.batch_loader.set_max_digits(params['max_digits'])
 
         if 'min_digits' in params.keys():
-            self.batch_loader.set_max_digits(params['min_digits'])
+            self.batch_loader.set_min_digits(params['min_digits'])
 
         if 'scale_range' in params.keys():
             self.batch_loader.set_scale_range(params['scale_range'])
