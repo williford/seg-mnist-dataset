@@ -107,7 +107,8 @@ class SegMNISTShapesLayerSync(caffe.Layer):
         if len(top) > 2:
             if len(params['im_shape']) == 2:
                 top[2].reshape(
-                    self.batch_size, 1, params['im_shape'][0], params['im_shape'][1])
+                    self.batch_size, 1,
+                    params['im_shape'][0], params['im_shape'][1])
             else:
                 top[2].reshape(
                     self.batch_size, 1, *params['im_shape'][1:])

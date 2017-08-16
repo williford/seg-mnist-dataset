@@ -40,7 +40,7 @@ def random_texture(shape,
 # Generate image where digits can appear anywhere, even overlapping.
 def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
                             bgmask=False, nchannels=1,
-                            scale_range=(1,1)):
+                            scale_range=(1, 1)):
 
     num_elem = np.sum(grid)
     # assert num_elem <= 3
@@ -56,7 +56,7 @@ def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
         var=np.random.gamma(1, 25, size=nchannels))
 
     if bgmask:
-        new_segm = np.ones((H, W), dtype=np.uint8)*255
+        new_segm = np.ones((H, W), dtype=np.uint8) * 255
     else:
         new_segm = np.zeros((H, W), dtype=np.uint8)
     labels = set()
@@ -106,7 +106,8 @@ def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
         # segmentation data
         new_segm[slice_dest_i, slice_dest_j][digit > 159] = label1 + 1
         assert new_segm.max() > 0 or num_elem == 0, (
-            "Segmentation data has maximum value of %f, even though it has %d elements." %
+            "Segmentation data has maximum value of %f, "
+            "even though it has %d elements." %
             (new_segm.max(), num_elem))
 
         # mask out intermediate values
@@ -119,27 +120,31 @@ def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
     return (new_data, new_segm, labels)
 
 
-
 def generate_textured_grid(mnist_iter, grid, mnist_shape=(28, 28),
                            bgmask=False, nchannels=1,
-                           scale_range=(1,1)):
+                           scale_range=(1, 1)):
     num_means = 10
     potential_means = np.arange(num_means) * (255. / (num_means - 1))
     np.random.shuffle(potential_means)
 
     h = mnist_shape[0]
     w = mnist_shape[1]
+    H = grid.shape[0] * h
+    W = grid.shape[1] * w
     potential_means = potential_means[0:-1]
-    new_segm = np.zeros((grid.shape[0] * h, grid.shape[1] * w), dtype=np.uint8)
+    new_segm = np.zeros((H, W), dtype=np.uint8)
     labels = set()
 
-    # new_data = random_texture((grid.shape[0] * h, grid.shape[1] * w), mean=potential_means[-1])
+    # new_data = random_texture((grid.shape[0] * h, grid.shape[1] * w),
+    #  mean=potential_means[-1])
     new_data = random_color_texture(
         (nchannels, H, W),
         mean=np.random.randint(256, size=nchannels),
         var=np.random.gamma(1, 25, size=nchannels))
 
-    for j in range(grid.shape[1]): # column
+    slice_chan = slice(nchannels)
+
+    for j in range(grid.shape[1]):  # column
         for i in range(grid.shape[0]):  # row
             # Position of "first" number
             offset_i = i * h
@@ -155,7 +160,14 @@ def generate_textured_grid(mnist_iter, grid, mnist_shape=(28, 28),
             data1 = data1.astype(dtype=np.float)
             labels.add(label1)
 
-            #digit_texture = random_texture((h, w), mean=potential_means[-1])
+            digit_offset_i = abs(min(0, offset_i))
+            digit_offset_j = abs(min(0, offset_j))
+            slice_src_i = slice(digit_offset_i,
+                                min(H, offset_i + h) - offset_i)
+            slice_src_j = slice(digit_offset_j,
+                                min(W, offset_j + w) - offset_j)
+
+            # digit_texture = random_texture((h, w), mean=potential_means[-1])
             digit_texture = random_color_texture(
                 (nchannels, h, w),
                 mean=np.random.randint(256, size=nchannels),
@@ -164,11 +176,10 @@ def generate_textured_grid(mnist_iter, grid, mnist_shape=(28, 28),
             digit_texture = digit_texture[slice_chan, slice_src_i, slice_src_j]
             potential_means = potential_means[0:-1]
 
-            new_data[offset_i:offset_i + h,
-                     offset_j:offset_j + w] = (
+            new_data[:, offset_i:offset_i + h, offset_j:offset_j + w] = (
                 data1 / 255.0 * digit_texture +
                 (255.0 - data1) / 255.0 *
-                         new_data[offset_i:offset_i + h, offset_j:offset_j + w]
+                new_data[:, offset_i:offset_i + h, offset_j:offset_j + w]
             )
 
             # segmentation data

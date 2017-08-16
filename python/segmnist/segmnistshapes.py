@@ -32,8 +32,8 @@ class RectangleShape(object):
         dist_x = abs(xv - self._center[1])
         dist_y = abs(yv - self._center[0])
         mask = np.minimum(
-            self._length1/2.0 - dist_x,
-            self._length2/2.0 - dist_y)
+            self._length1 / 2.0 - dist_x,
+            self._length2 / 2.0 - dist_y)
         mask = np.maximum(0.0, mask)
         mask = np.minimum(1.0, mask)
         return mask
@@ -41,8 +41,8 @@ class RectangleShape(object):
     def draw_label_segimage(self, segmask, label):
         if self._shape_mask is None:
             self._shape_mask = self._calculate_shape_mask(segmask.shape)
-        segmask[self._shape_mask > 0] = 255;
-        segmask[self._shape_mask >= 1] = label;
+        segmask[self._shape_mask > 0] = 255
+        segmask[self._shape_mask >= 1] = label
 
     def draw_shape_image(self, image):
         if self._shape_mask is None:
@@ -188,8 +188,15 @@ class SegMNISTShapes(object):
         for shapeGen in self._shapeGenerators:
             self._class_names.append(shapeGen.class_name())
 
+        self._classprob = None  # uniform by default
+
     def class_names(self):
         return self._class_names
+
+    def set_class_freq(self, freq):
+        self._classprob = np.array(freq, dtype=np.float)
+        self._classprob[:] = self._classprob / np.sum(self._classprob[:])
+        assert 10 + len(self._shapeGenerators) == self._classprob.size
 
     def set_min_digits(self, min_objects):
         self._min_num_objects = min_objects
@@ -265,7 +272,9 @@ class SegMNISTShapes(object):
             labels = set()
             # Add objects
             for iobj in range(nobj):
-                clsi = random.randint(0, 9 + len(self._shapeGenerators))
+                # clsi = random.randint(0, 9 + len(self._shapeGenerators))
+                clsi = np.random.choice(10 + len(self._shapeGenerators),
+                                        p=self._classprob)
                 if clsi > 9:
                     shape = (
                         self._shapeGenerators[clsi - 10].generate_shape(

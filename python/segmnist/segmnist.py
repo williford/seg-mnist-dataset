@@ -12,7 +12,7 @@ class SegMNIST(object):
                  prob_mask_bg=None,
                  min_cells_with_digits=1,
                  max_cells_with_digits=None,
-                 position='random',
+                 position='grid',
                  nchannels=1):
         assert mnist is not None
         self._mnist_iter = mnist.iter()

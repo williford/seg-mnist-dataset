@@ -122,6 +122,7 @@ def generate_segmnist_shapes_all(cells_with_num,
         prob_mask_bg = prob_mask_bg,
         positioning = positioning,
     )
+    mnist_trn.set_class_freq((1,1,1,1,1, 1,1,1,1,1, 3, 3))
 
     #mnist_val = loader.MNIST(path, dataset_slice=(5000, 6000))
     #mnist_val.load_standard('training')
@@ -131,6 +132,7 @@ def generate_segmnist_shapes_all(cells_with_num,
         prob_mask_bg = prob_mask_bg,
         positioning = positioning,
     )
+    mnist_trn.set_class_freq((1,1,1,1,1, 1,1,1,1,1, 3, 3))
 
     (hclsfiles_trn, hsegfiles_trn) = (
         generate_segmnist_shapes_x_images(dataset=mnist_trn,

@@ -69,7 +69,7 @@ class SegMNIST2x2LayerSync(caffe.Layer):
         # === reshape tops ===
         # since we use a fixed input image size, we can shape the data layer
         # once. Else, we'd have to do it in the reshape call.
-        if len( params['im_shape'] ) == 2:
+        if len(params['im_shape']) == 2:
             top[0].reshape(
                 self.batch_size, 1, params['im_shape'][0], params['im_shape'][1])
         else:
@@ -78,7 +78,7 @@ class SegMNIST2x2LayerSync(caffe.Layer):
         # Note the 10 channels (for the 10 digits).
         top[1].reshape(self.batch_size, 10, 1, 1)
         if len(top) > 2:
-            if len( params['im_shape'] ) == 2:
+            if len(params['im_shape']) == 2:
                 top[2].reshape(
                     self.batch_size, 1, params['im_shape'][0], params['im_shape'][1])
             else:
