@@ -47,8 +47,12 @@ class SegMNISTShapesLayerSync(caffe.Layer):
         # ex. mnist-training or mnist-validation
         self.mnist_dataset_name = params['mnist_dataset']
 
-        # probability of the original background being masked
-        self.prob_mask_bg = params['prob_mask_bg']
+        # multiplier for number of background pixels that are not masked
+        # replaces prob_mask_bg
+        if 'bg_pix_mul' in params.keys():
+            self.bg_pix_mul = params['bg_pix_mul']
+        else:
+            self.bg_pix_mul = 1.0
 
         self.nclasses = params['nclasses']
 
@@ -80,7 +84,7 @@ class SegMNISTShapesLayerSync(caffe.Layer):
         self.batch_loader = SegMNISTShapes(
             self.mnist,
             imshape=self.imshape,
-            prob_mask_bg=self.prob_mask_bg,
+            bg_pix_mul=self.bg_pix_mul,
             positioning=self.positioning,
             shapes=shapes
         )
@@ -173,7 +177,7 @@ def check_params(params):
     assert 'mnist_dataset' in params.keys(
     ), 'Params must include mnist_dataset (mnist-training, mnist-validation).'
 
-    required = ['batch_size', 'im_shape', 'prob_mask_bg']
+    required = ['batch_size', 'im_shape']
     for r in required:
         assert r in params.keys(), 'Params must include {}'.format(r)
 

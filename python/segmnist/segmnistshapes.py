@@ -149,19 +149,25 @@ class SquareGenerator(ShapeGenerator):
 class SegMNISTShapes(object):
     def __init__(self, mnist,
                  imshape,  # include nchannels: C x H x W
-                 prob_mask_bg,
+                 bg_pix_mul,
                  min_num_objects=1,
                  max_num_objects=None,
                  positioning='random',
                  shapes=[SquareGenerator(random_color_texture),
                          RectangleGenerator(random_color_texture),
                          ]):
+        """
+        bg_pix_mul: multiplier for the number of background pixels that are
+            not masked out. If bg_pix_mul==1, then the number of background
+            pixels will be set to be approximately the average number of pixels
+            for each object / digit.
+        """
 
         assert mnist is not None
         self._mnist_iter = mnist.iter()
 
-        assert prob_mask_bg <= 1.0, "prob_mask_bg should be set from 0 to 1."
-        self._prob_mask_bg = prob_mask_bg
+        assert bg_pix_mul > 0.0, "bg_pix_mul must be more than 0."
+        self._bg_pix_mul = bg_pix_mul
 
         self._digit_size = 28
         self._min_num_objects = min_num_objects
@@ -221,8 +227,9 @@ class SegMNISTShapes(object):
                 self._digit_size * self._scale_range[0] * 0.25,
                 self._digit_size * self._scale_range[1])
 
-    def set_prob_mask_bg(self, prob_mask_bg):
-        self._prob_mask_bg = prob_mask_bg
+    def set_bg_pix_mul(self, bg_pix_mul):
+        """ Replaces seg_prob_mask_bg"""
+        self._bg_pix_mul = bg_pix_mul
 
     """ Return single example with image, class labels, and segmentation labels.
     """
@@ -264,9 +271,6 @@ class SegMNISTShapes(object):
                 mean=np.random.randint(256, size=self._imshape[0]),
                 var=np.random.gamma(1, 25, size=self._imshape[0]))
 
-            # assert self._prob_mask_bg is not None, (
-            #     "Probability mask background (prob_mask_bg) not set!")
-
             seg_label[n] = np.zeros(shape=self._imshape[1:])
 
             labels = set()
@@ -292,13 +296,15 @@ class SegMNISTShapes(object):
                         positioning=self._positioning)
                     labels.add(label)
 
-            if self._prob_mask_bg is not False:
+            if self._bg_pix_mul > 0.0:  # should always be true
                 npix_bg = np.sum(seg_label[n] == 0)
                 npix_fg = np.sum(np.logical_and(
                     seg_label[n] > 0,
                     seg_label[n] < 255))
-                # we should make npix_bg be npix_fg / nobj
-                prob_bg = (float(npix_fg) / nobj) / npix_bg
+
+                # make npix_bg == npix_fg / nobj, when bg_pix_mul == 1
+                prob_bg = min(
+                    1.0, self._bg_pix_mul * (float(npix_fg) / nobj) / npix_bg)
 
                 uniform = np.random.uniform(size=self._imshape[1:])
                 # make sure there is atleast 1 bg pixel
