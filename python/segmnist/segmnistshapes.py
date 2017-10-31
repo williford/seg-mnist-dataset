@@ -5,15 +5,24 @@ from texture_generator import random_color_texture
 from . import mnist_generator
 import os
 import numpy as np
+import math
 import pdb
 
 
 class RectangleShape(object):
-    def __init__(self, center, length1, length2, rotation, texturegen):
+    def __init__(self, center, length1, length2, orientation, texturegen):
+        """
+        Args:
+            center: position of the center of the object
+            length1: length 1 of the rectangle
+            length2: length 2 of the rectangle
+            orientation: orientation of the rectangle (clockwise)
+            texturegen: texture generator
+        """
         self._center = center
         self._length1 = length1
         self._length2 = length2
-        self._rotation = rotation
+        self._orientation = orientation
         self._texturegen = texturegen
         self._corner_1 = [
             self._center[0] - self._length1 / 2.0,
@@ -29,11 +38,19 @@ class RectangleShape(object):
         yv, xv = np.meshgrid(
             np.arange(imshape[0]),
             np.arange(imshape[1]))
-        dist_x = abs(xv - self._center[1])
-        dist_y = abs(yv - self._center[0])
+        dist_x = xv - self._center[1]
+        dist_y = yv - self._center[0]
+
+        # Rotation (around pos_yx)
+        x_theta = (dist_x * np.cos(self._orientation) -
+                   dist_y * np.sin(self._orientation))
+
+        y_theta = (dist_x * np.sin(self._orientation) +
+                   dist_y * np.cos(self._orientation))
+
         mask = np.minimum(
-            self._length1 / 2.0 - dist_x,
-            self._length2 / 2.0 - dist_y)
+            self._length1 / 2.0 - abs(x_theta),
+            self._length2 / 2.0 - abs(y_theta))
         mask = np.maximum(0.0, mask)
         mask = np.minimum(1.0, mask)
         return mask
@@ -56,8 +73,8 @@ class RectangleShape(object):
 
 
 class SquareShape(RectangleShape):
-    def __init__(self, center, diameter, rotation, texturegen):
-        super(SquareShape, self).__init__(center, diameter, diameter, rotation, texturegen)
+    def __init__(self, center, diameter, orientation, texturegen):
+        super(SquareShape, self).__init__(center, diameter, diameter, orientation, texturegen)
 
 
 class ShapeGenerator(object):
@@ -110,9 +127,9 @@ class RectangleGenerator(ShapeGenerator):
         (center_x, center_y) = positioning.generate(
             self._frame, (length1, length2), center=True,
             max_ratio_outside=self._max_ratio_outside)
-        rotation = 0
+        orientation = random.uniform(0, math.pi/2)
 
-        return RectangleShape((center_y, center_x), length1, length2, rotation,
+        return RectangleShape((center_y, center_x), length1, length2, orientation,
                            self._texturegen)
 
     def class_name(self):
@@ -137,9 +154,9 @@ class SquareGenerator(ShapeGenerator):
         # center_y0 = self._frame.y0 + diameter - self._max_ratio_outside * diameter
         # center_y1 = self._frame.y1 - diameter + self._max_ratio_outside * diameter
         # center_y = random.uniform(center_y0, center_y1)
-        rotation = 0
+        orientation = random.uniform(0, math.pi/2)
 
-        return SquareShape((center_y, center_x), diameter, rotation,
+        return SquareShape((center_y, center_x), diameter, orientation,
                            self._texturegen)
 
     def class_name(self):
@@ -158,7 +175,7 @@ class SegMNISTShapes(object):
                          ]):
         """
         bg_pix_mul: multiplier for the number of background pixels that are
-            not masked out. If bg_pix_mul==1, then the number of background
+            NOT masked out. If bg_pix_mul==1, then the number of background
             pixels will be set to be approximately the average number of pixels
             for each object / digit.
         """

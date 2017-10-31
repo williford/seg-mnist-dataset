@@ -108,9 +108,9 @@ def generate_segmnist_shapes_all(cells_with_num,
         path = os.path.expanduser("~/Data/mnist")
 
     if mask_bg:
-        prob_mask_bg = 1
+        prob_bg = 1 # make number of bg pixels ~= fg pixels of 1 object
     else:
-        prob_mask_bg = 0
+        prob_bg = float('inf')
 
     positioning='grid'
 
@@ -119,7 +119,7 @@ def generate_segmnist_shapes_all(cells_with_num,
     mnist_trn = SegMNISTShapes(
         mnist = SegMNIST.load_standard_MNIST('mnist-training', shuffle=False),
         imshape = (3, 28*2, 28*2),
-        prob_mask_bg = prob_mask_bg,
+        bg_pix_mul = prob_bg,
         positioning = positioning,
     )
     mnist_trn.set_class_freq((1,1,1,1,1, 1,1,1,1,1, 3, 3))
@@ -129,7 +129,7 @@ def generate_segmnist_shapes_all(cells_with_num,
     mnist_val = SegMNISTShapes(
         mnist = SegMNIST.load_standard_MNIST('mnist-validation', shuffle=False),
         imshape = (3, 28*2, 28*2),
-        prob_mask_bg = prob_mask_bg,
+        bg_pix_mul = prob_bg,
         positioning = positioning,
     )
     mnist_trn.set_class_freq((1,1,1,1,1, 1,1,1,1,1, 3, 3))
