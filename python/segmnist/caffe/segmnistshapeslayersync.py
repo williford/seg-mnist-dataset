@@ -32,8 +32,6 @@ class SegMNISTShapesLayerSync(caffe.Layer):
 
     def setup(self, bottom, top):
 
-        self.top_names = ['data', 'seg-label', 'cls-label']
-
         # === Read input parameters ===
 
         # params is a python dictionary with layer parameters.
@@ -108,13 +106,22 @@ class SegMNISTShapesLayerSync(caffe.Layer):
 
         # Note the N channels (for the 10 digits + n shapes).
         top[1].reshape(self.batch_size, self.nclasses, 1, 1)
-        if len(top) > 2:
+        if len(top) == 3:  # to-do: deprecate this case!
             if len(params['im_shape']) == 2:
                 top[2].reshape(
                     self.batch_size, 1,
                     params['im_shape'][0], params['im_shape'][1])
             else:
                 top[2].reshape(
+                    self.batch_size, 1, *params['im_shape'][1:])
+        elif len(top) == 4:
+            top[2].reshape(self.batch_size, self.nclasses, 1, 1)
+            if len(params['im_shape']) == 2:
+                top[3].reshape(
+                    self.batch_size, 1,
+                    params['im_shape'][0], params['im_shape'][1])
+            else:
+                top[3].reshape(
                     self.batch_size, 1, *params['im_shape'][1:])
 
         print_info("SegMNISTShapesLayerSync", params)
@@ -126,11 +133,9 @@ class SegMNISTShapesLayerSync(caffe.Layer):
         (img_data, cls_label, seg_label) = (
             self.batch_loader.create_batch(self.batch_size))
         top[0].data[...] = img_data
-        if len(top) == 2:
-            # if there is no seg-label, cls_label should encode all classes
-            top[1].data[...] = cls_label
-        else:
-            assert len(top) > 2
+        if len(top) == 3:  # tops: (data, cls-label, seg-label), to-do: deprecate
+            print('Using 3 tops for SegMNISTShapesLayerSync python layer '
+                  'is deprecated!\n\n')
 
             top[1].data.fill(0)
 
@@ -152,9 +157,38 @@ class SegMNISTShapesLayerSync(caffe.Layer):
                 top[2].data[n, 0][seg_label[n, 0] == 255] = 255
 
                 # set current label to foreground
-                ind0 = seg_label[n, 0]==255
-                ind = seg_label[n, 0]==(lbl + 1)
+                ind0 = seg_label[n, 0] == 255
+                ind = seg_label[n, 0] == (lbl + 1)
                 top[2].data[n, 0][seg_label[n, 0] == (lbl + 1)] = 1
+        else:  # tops: (data, cls-label, [attend-label, seg-label])
+            assert len(top) == 2 or len(top) == 4
+            # cls_label should encode all classes
+            top[1].data[...] = cls_label
+
+            if len(top) > 2:
+                top[2].data.fill(0)  # top: attend-label
+
+                # set default values to be background
+                # (used for the digits with other labels)
+                top[3].data.fill(0)
+
+                # for each example in batch
+                for n in range(cls_label.shape[0]):
+                    # get indices (==labels) of classes that are in image
+                    labels = np.flatnonzero(cls_label[n])
+
+                    # randomly pick one of the labels
+                    lbl = random.sample(labels, 1)[0]
+                    top[2].data[n, lbl, 0, 0] = 1
+
+                    # retain masked out regions
+                    # (if mask_bg, this includes the original background)
+                    top[3].data[n, 0][seg_label[n, 0] == 255] = 255
+
+                    # set current label to foreground
+                    ind0 = seg_label[n, 0] == 255
+                    ind = seg_label[n, 0] == (lbl + 1)
+                    top[3].data[n, 0][seg_label[n, 0] == (lbl + 1)] = 1
 
     def reshape(self, bottom, top):
         """

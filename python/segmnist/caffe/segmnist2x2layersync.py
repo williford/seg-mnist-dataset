@@ -28,8 +28,6 @@ class SegMNIST2x2LayerSync(caffe.Layer):
 
     def setup(self, bottom, top):
 
-        self.top_names = ['data', 'seg-label', 'cls-label']
-
         # === Read input parameters ===
 
         # params is a python dictionary with layer parameters.
