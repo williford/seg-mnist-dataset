@@ -78,8 +78,11 @@ class SegMNISTShapesPyTorch():
         # convert to tensor
         (img_data, cls_label, seg_label) = (
             torch.from_numpy(img_data).type(torch.FloatTensor),
-            torch.from_numpy(cls_label).type(torch.LongTensor),
+            torch.from_numpy(cls_label).type(torch.FloatTensor),
             torch.from_numpy(seg_label).type(torch.FloatTensor))
+
+        # flatten cls_label
+        cls_label = cls_label.view(-1, self.nclasses)
 
         # transfer to GPU
         if self.GPU:
