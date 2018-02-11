@@ -6,7 +6,6 @@ import errno
 import pandas as pd
 import itertools
 
-import h5py
 import math
 import random
 
