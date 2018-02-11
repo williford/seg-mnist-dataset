@@ -90,8 +90,8 @@ def generate_segmnist_shapes_bgmask(mask_bg, output_dir):
 
 
 def generate_segmnist_shapes_all(cells_with_num,
-                                              mask_bg=False,
-                                              output_dir='.'):
+                                 mask_bg=False,
+                                 output_dir='.'):
     if not mask_bg:
         prefix = 'seg-mnist-shapes-%d' % cells_with_num
         output_dir = os.path.join(output_dir, prefix)

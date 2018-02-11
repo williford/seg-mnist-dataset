@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import os
 import loader
 import scipy.misc
@@ -13,28 +11,7 @@ import math
 import random
 
 
-def random_color_texture(shape, mean, var):
-    assert shape[0] == len(mean)
-    assert shape[0] == len(var)
-    shape0 = list(shape)
-    shape0[0] = 1
-    textures = [random_texture(shape[1:], mean[i], var[i]).reshape(shape0)
-                for i in range(shape[0])]
-    ret = np.concatenate(textures)
-    return ret
 
-
-def random_texture(shape,
-                   mean=np.random.uniform(0, 255),
-                   var=np.random.gamma(1, 25)):
-    if var == 0:
-        texture = np.ones(shape) * mean
-    else:
-        texture = np.random.normal(loc=mean, scale=math.sqrt(var), size=shape)
-
-    texture[texture > 255] = 255
-    texture[texture < 0] = 0
-    return texture
 
 
 # Generate image where digits can appear anywhere, even overlapping.

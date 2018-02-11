@@ -172,7 +172,9 @@ class SegMNISTShapes(object):
                  positioning='random',
                  shapes=[SquareGenerator(random_color_texture),
                          RectangleGenerator(random_color_texture),
-                         ]):
+                         ],
+                 probSinusoidalGratings=0.0,
+                 ):
         """
         bg_pix_mul: multiplier for the number of background pixels that are
             NOT masked out. If bg_pix_mul==1, then the number of background
@@ -212,6 +214,7 @@ class SegMNISTShapes(object):
             self._class_names.append(shapeGen.class_name())
 
         self._classprob = None  # uniform by default
+        self._probSinusoidalGratings = probSinusoidalGratings
 
     def class_names(self):
         return self._class_names
