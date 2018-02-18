@@ -1,12 +1,14 @@
 import random
 import itertools
 from . import loader
-from texture_generator import random_color_texture
+# from texture_generator import random_color_texture
+from textures import WhiteNoise
 from . import mnist_generator
 import os
 import numpy as np
 import math
 import pdb
+from abc import ABCMeta
 
 
 class RectangleShape(object):
@@ -64,10 +66,11 @@ class RectangleShape(object):
     def draw_shape_image(self, image):
         if self._shape_mask is None:
             self._shape_mask = self._calculate_shape_mask(image.shape[1:])
-        texture = self._texturegen(
-            image.shape,
-            mean=np.random.randint(256, size=image.shape[0]),
-            var=np.random.gamma(1, 25, size=image.shape[0]))
+        #texture = self._texturegen(
+        #    image.shape,
+        #    mean=np.random.randint(256, size=image.shape[0]),
+        #    var=np.random.gamma(1, 25, size=image.shape[0]))
+        texture = self._texturegen.generate()
 
         image[:] = np.multiply(image, 1.0 - self._shape_mask) + np.multiply(texture, self._shape_mask)
 
@@ -78,12 +81,12 @@ class SquareShape(RectangleShape):
 
 
 class ShapeGenerator(object):
-    def __init__(self, texturegen):
+    __metaclass__ = ABCMeta
+    def __init__(self):
         self._frame = None
         self._max_ratio_outside = None  # express as ratio of diameter
         self._center_boundary = None
         self._drange = None
-        self._texturegen = texturegen
 
     def set_frame_boundary(self, frame_shape, max_shape_outside=0.0):
         assert len(frame_shape)==2
@@ -94,18 +97,20 @@ class ShapeGenerator(object):
     def set_diameter_range(self, dmin, dmax):
         self._drange = (dmin, dmax)
 
-    def generate_shape(self, positioning):
+    # @abstractmethod
+    def generate_shape(self, positioning, texturegen):
         raise NotImplementedError
 
+    # @abstractmethod
     def class_name(self):
         raise NotImplementedError
 
 
 class RectangleGenerator(ShapeGenerator):
-    def __init__(self, texturegen):
-        super(RectangleGenerator, self).__init__(texturegen)
+    def __init__(self):
+        super(RectangleGenerator, self).__init__()
 
-    def generate_shape(self, positioning):
+    def generate_shape(self, positioning, texturegen):
         ave_length = random.uniform(self._drange[0], self._drange[1])
         # length_diff is difference between lengths as a ratio
         # 0 = no difference, 1 = one side is twice as long as other
@@ -130,17 +135,17 @@ class RectangleGenerator(ShapeGenerator):
         orientation = random.uniform(0, math.pi/2)
 
         return RectangleShape((center_y, center_x), length1, length2, orientation,
-                           self._texturegen)
+                           texturegen)
 
     def class_name(self):
         return 'Rectangle'
 
 
 class SquareGenerator(ShapeGenerator):
-    def __init__(self, texturegen):
-        super(SquareGenerator, self).__init__(texturegen)
+    def __init__(self):
+        super(SquareGenerator, self).__init__()
 
-    def generate_shape(self, positioning):
+    def generate_shape(self, positioning, texturegen):
         diameter = random.uniform(self._drange[0], self._drange[1])
 
         (center_x, center_y) = positioning.generate(
@@ -157,7 +162,7 @@ class SquareGenerator(ShapeGenerator):
         orientation = random.uniform(0, math.pi/2)
 
         return SquareShape((center_y, center_x), diameter, orientation,
-                           self._texturegen)
+                           texturegen)
 
     def class_name(self):
         return 'Square'
@@ -170,10 +175,10 @@ class SegMNISTShapes(object):
                  min_num_objects=1,
                  max_num_objects=None,
                  positioning='random',
-                 shapes=[SquareGenerator(random_color_texture),
-                         RectangleGenerator(random_color_texture),
+                 shapes=[SquareGenerator(),
+                         RectangleGenerator(),
                          ],
-                 probSinusoidalGratings=0.0,
+                 texturegen=None,
                  ):
         """
         bg_pix_mul: multiplier for the number of background pixels that are
@@ -203,6 +208,14 @@ class SegMNISTShapes(object):
 
         self._scale_range = (1.0, 1.0)
 
+        if texturegen is None:
+            texturegen = WhiteNoise(
+                    mean_dist=lambda: np.random.randint(256),
+                    var_dist=lambda: np.random.gamma(1, 25),
+                    shape=imshape,
+                    )
+        self._texturegen = texturegen
+
         self._shapeGenerators = shapes
         for shape in self._shapeGenerators:
             shape.set_frame_boundary(imshape[1:3], 0.25)
@@ -214,7 +227,6 @@ class SegMNISTShapes(object):
             self._class_names.append(shapeGen.class_name())
 
         self._classprob = None  # uniform by default
-        self._probSinusoidalGratings = probSinusoidalGratings
 
     def class_names(self):
         return self._class_names
@@ -286,10 +298,11 @@ class SegMNISTShapes(object):
             self._positioning.reset()
 
             # create background texture
-            img_data[n] = random_color_texture(
-                self._imshape,
-                mean=np.random.randint(256, size=self._imshape[0]),
-                var=np.random.gamma(1, 25, size=self._imshape[0]))
+            img_data[n] = self._texturegen.generate()
+            # img_data[n] = random_color_texture(
+            #     self._imshape,
+            #     mean=np.random.randint(256, size=self._imshape[0]),
+            #     var=np.random.gamma(1, 25, size=self._imshape[0]))
 
             seg_label[n] = np.zeros(shape=self._imshape[1:])
 
@@ -302,7 +315,8 @@ class SegMNISTShapes(object):
                 if clsi > 9:
                     shape = (
                         self._shapeGenerators[clsi - 10].generate_shape(
-                            self._positioning))
+                            self._positioning,
+                            self._texturegen))
 
                     shape.draw_label_segimage(seg_label[n, 0], clsi + 1)
                     shape.draw_shape_image(img_data[n])
@@ -312,7 +326,7 @@ class SegMNISTShapes(object):
                     label = self._generate_digit(
                         img_data[n], seg_label[n, 0],
                         self._mnist_iter,
-                        random_color_texture,
+                        self._texturegen,
                         positioning=self._positioning)
                     labels.add(label)
 

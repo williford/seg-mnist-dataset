@@ -54,7 +54,7 @@ class RandomPositioning(object):
 def generate_digit(new_data,
                    new_segm,
                    mnist_iter,
-                   random_texture,
+                   texturegen,
                    mnist_shape=(28, 28),
                    scale_range=(1, 1),
                    positioning=RandomPositioning):
@@ -81,11 +81,12 @@ def generate_digit(new_data,
     slice_src_j = slice(digit_offset_j, min(W, offset_j + w) - offset_j)
     digit = data1[slice_src_i, slice_src_j].astype(dtype=np.float)
 
-    digit_texture = random_texture(
-        (nchannels, h, w),
-        mean=np.random.randint(256, size=nchannels),
-        var=np.random.gamma(1, 25, size=nchannels)
-    )
+    digit_texture = texturegen.generate()
+    # random_texture(
+    #     (nchannels, h, w),
+    #     mean=np.random.randint(256, size=nchannels),
+    #     var=np.random.gamma(1, 25, size=nchannels)
+    # )
     digit_texture = digit_texture[slice_chan, slice_src_i, slice_src_j]
 
     new_data[slice_chan, slice_dest_i, slice_dest_j] = (

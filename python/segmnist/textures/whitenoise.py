@@ -4,19 +4,18 @@ import math
 
 
 class WhiteNoise(TextureGenerator):
-    def __init__(self, mean, var, valid_range=(0, 255)):
-        self._mean_dist = mean
-        self._var_dist = var
+    def __init__(self, mean_dist, var_dist, shape, valid_range=(0, 255)):
+        self._mean_dist = mean_dist
+        self._var_dist = var_dist
         self._valid_range = valid_range
+        self._shape = shape
 
-    def generate(self, shape):
+    def generate(self):
 
-        assert shape[0] == len(mean)
-        assert shape[0] == len(var)
-        shape0 = list(shape)
+        shape0 = list(self._shape)
         shape0[0] = 1
-        textures = [self.random_texture(shape0)
-                    for i in range(shape[0])]
+        textures = [self.random_texture_1c(shape0)
+                    for i in range(self._shape[0])]
         ret = np.concatenate(textures)
         return ret
 
@@ -28,6 +27,6 @@ class WhiteNoise(TextureGenerator):
         else:
             texture = np.random.normal(loc=mean, scale=math.sqrt(var), size=shape)
 
-        texture[texture > 255] = 255
-        texture[texture < 0] = 0
+        texture[texture > self._valid_range[1]] = self._valid_range[1]
+        texture[texture < self._valid_range[0]] = self._valid_range[0]
         return texture

@@ -10,9 +10,6 @@ import math
 import random
 
 
-
-
-
 # Generate image where digits can appear anywhere, even overlapping.
 def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
                             bgmask=False, nchannels=1,
