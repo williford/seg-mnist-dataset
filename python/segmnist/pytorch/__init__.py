@@ -1,0 +1,1 @@
+from segmnist_pytorch import SegMNISTShapesPyTorch
