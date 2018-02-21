@@ -1,7 +1,5 @@
 from generator import TextureGenerator
 import numpy as np
-import math
-import ipdb as pdb
 
 class TextureDispatcher(TextureGenerator):
     """ Contains other textures. For every example / image, it chooses a
@@ -9,17 +7,17 @@ class TextureDispatcher(TextureGenerator):
     """
     def __init__(self):
         self._probtextgen = np.empty((0,))
-        self._textgen = []
+        self._textgens = []
         self._example_gen = False
         self._curr_textgen = None
 
-    def add_texturegen(self, prob, textgen):
+    def add_texturegen(self, prob, textgens):
         assert not self._example_gen, (
             'Adding texture generator after generating an '
             'example is not allowed')
         assert prob > 0, 'Probability of texture must be greater than 0.'
         self._probtextgen = np.append(self._probtextgen, prob)
-        self._textgen.append(textgen)
+        self._textgens.append(textgens)
 
     def new_example(self, ntextures):
         """ Called once for every example / image. """
@@ -29,7 +27,7 @@ class TextureDispatcher(TextureGenerator):
             self._example_gen = True
 
         # choose which generator to use
-        self._curr_textgen = np.random.choice(self._textgen,
+        self._curr_textgen = np.random.choice(self._textgens,
                                               p=self._probtextgen)
         return self._curr_textgen.new_example(ntextures)
 
@@ -37,3 +35,6 @@ class TextureDispatcher(TextureGenerator):
         """ Called for every texture.
         """
         return self._curr_textgen.generate()
+
+    def generators(self):
+        return self._textgens

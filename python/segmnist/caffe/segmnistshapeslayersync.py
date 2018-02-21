@@ -17,13 +17,16 @@ from threading import Thread
 from PIL import Image
 
 from segmnist import SegMNISTShapes
-from loader.mnist import load_standard_MNIST
+from segmnist.loader.mnist import load_standard_MNIST
 from segmnist.segmnistshapes import SquareGenerator
 from segmnist.segmnistshapes import RectangleGenerator
 
+from segmnist.textures import TextureDispatcher
+from segmnist.textures import WhiteNoiseTexture
+from segmnist.textures import SinusoidalGratings
+
 
 class SegMNISTShapesLayerSync(caffe.Layer):
-
     """
     This is a simple synchronous datalayer for training a network on the
     SegMNISTShapes dataset.
@@ -78,13 +81,34 @@ class SegMNISTShapesLayerSync(caffe.Layer):
         if self.nclasses >= 12:
             shapes.append(RectangleGenerator())
 
+        texturegen = TextureDispatcher()
+        if 'pgratings' in params.keys() and params['pgratings'] > 0:
+            texturegen.add_texturegen(
+                params['pgratings'],
+                SinusoidalGratings(shape=self.imshape))
+
+        defaultTexture = WhiteNoiseTexture(
+            mean_dist=lambda: np.random.randint(256),
+            var_dist=lambda: np.random.gamma(1, 25),
+            shape=self.imshape,
+        )
+        if 'pwhitenoise' in params.keys() and params['pwhitenoise'] > 0:
+            texturegen.add_texturegen(
+                params['pwhitenoise'],
+                defaultTexture)
+
         self.batch_loader = SegMNISTShapes(
             self.mnist,
             imshape=self.imshape,
             bg_pix_mul=self.bg_pix_mul,
             positioning=self.positioning,
-            shapes=shapes
+            shapes=shapes,
+            texturegen=texturegen,
         )
+
+        # if no texture generated added via parameters, add white noise
+        if len(texturegen.generators()) == 0:
+            texturegen.add_texturegen(1, defaultTexture)
 
         if 'max_digits' in params.keys():
             self.batch_loader.set_max_digits(params['max_digits'])
