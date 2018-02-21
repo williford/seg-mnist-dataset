@@ -1,7 +1,6 @@
 from generator import TextureGenerator
 import numpy as np
 import math
-import ipdb as pdb
 
 class SinusoidalGratings(TextureGenerator):
     """ Texture with sinusoidal gratings.
