@@ -17,10 +17,9 @@ from threading import Thread
 from PIL import Image
 
 from segmnist import SegMNISTShapes
-from segmnist import SegMNIST
+from loader.mnist import load_standard_MNIST
 from segmnist.segmnistshapes import SquareGenerator
 from segmnist.segmnistshapes import RectangleGenerator
-from segmnist.texture_generator import random_color_texture
 
 
 class SegMNISTShapesLayerSync(caffe.Layer):
@@ -70,14 +69,14 @@ class SegMNISTShapesLayerSync(caffe.Layer):
             self.imshape = (params['nchannels'],) + self.imshape
 
         # Create a batch loader to load the images.
-        self.mnist = SegMNIST.load_standard_MNIST(
+        self.mnist = load_standard_MNIST(
             self.mnist_dataset_name, shuffle=True)  # BatchLoader(params, None)
 
         shapes = []
         if self.nclasses >= 11:
-            shapes.append(SquareGenerator(random_color_texture))
+            shapes.append(SquareGenerator())
         if self.nclasses >= 12:
-            shapes.append(RectangleGenerator(random_color_texture))
+            shapes.append(RectangleGenerator())
 
         self.batch_loader = SegMNISTShapes(
             self.mnist,

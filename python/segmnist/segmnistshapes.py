@@ -1,8 +1,7 @@
 import random
 import itertools
 from . import loader
-# from texture_generator import random_color_texture
-from textures import WhiteNoise
+from textures import WhiteNoiseTexture
 from . import mnist_generator
 import os
 import numpy as np
@@ -209,7 +208,7 @@ class SegMNISTShapes(object):
         self._scale_range = (1.0, 1.0)
 
         if texturegen is None:
-            texturegen = WhiteNoise(
+            texturegen = WhiteNoiseTexture(
                     mean_dist=lambda: np.random.randint(256),
                     var_dist=lambda: np.random.gamma(1, 25),
                     shape=imshape,
@@ -296,14 +295,11 @@ class SegMNISTShapes(object):
             # positioning object needs to be reset each example
             #   (for finite sets)
             self._positioning.reset()
+            # texture generator also needs to be reset
+            self._texturegen.new_example(nobj)
 
             # create background texture
             img_data[n] = self._texturegen.generate()
-            # img_data[n] = random_color_texture(
-            #     self._imshape,
-            #     mean=np.random.randint(256, size=self._imshape[0]),
-            #     var=np.random.gamma(1, 25, size=self._imshape[0]))
-
             seg_label[n] = np.zeros(shape=self._imshape[1:])
 
             labels = set()

@@ -4,9 +4,6 @@ import os
 import struct
 import numpy as np
 
-import random
-import math
-
 
 def load_standard_MNIST(name, shuffle, path=None):
     if path is None:
@@ -17,9 +14,10 @@ def load_standard_MNIST(name, shuffle, path=None):
                                 'function parameter path must be defined')
 
     if shuffle:
-        D = loader.ShuffledMNIST
+        from shuffled_mnist import ShuffledMNIST
+        D = ShuffledMNIST
     else:
-        D = loader.MNIST
+        D = MNIST
 
     if name == 'training' or name == 'mnist-training':
         mnist = D(path, dataset_slice=(0, 5000))
@@ -94,7 +92,7 @@ class MNIST(object):
 
     def iter(self, max_iter=None):
         """ Iterate over the image and file pairs.
-        
+
             By default, iterates over dataset once, but can be more (or infinite).
         """
         if self.lbl is None or self.img is None:

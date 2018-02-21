@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 
-class WhiteNoise(TextureGenerator):
+class WhiteNoiseTexture(TextureGenerator):
     def __init__(self, mean_dist, var_dist, shape, valid_range=(0, 255)):
         self._mean_dist = mean_dist
         self._var_dist = var_dist
@@ -25,7 +25,8 @@ class WhiteNoise(TextureGenerator):
         if var == 0:
             texture = np.ones(shape) * mean
         else:
-            texture = np.random.normal(loc=mean, scale=math.sqrt(var), size=shape)
+            texture = np.random.normal(
+                loc=mean, scale=math.sqrt(var), size=shape)
 
         texture[texture > self._valid_range[1]] = self._valid_range[1]
         texture[texture < self._valid_range[0]] = self._valid_range[0]

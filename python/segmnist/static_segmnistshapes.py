@@ -11,8 +11,11 @@ import itertools
 import pdb
 
 import h5py
-from segmnist import SegMNIST
+from loader.mnist import load_standard_MNIST
 from segmnistshapes import SegMNISTShapes
+from textures import TextureDispatcher
+from textures import WhiteNoiseTexture
+from textures import SinusoidalGratings
 
 
 def mkdirs(path):
@@ -108,31 +111,38 @@ def generate_segmnist_shapes_all(cells_with_num,
         path = os.path.expanduser("~/Data/mnist")
 
     if mask_bg:
-        prob_bg = 1 # make number of bg pixels ~= fg pixels of 1 object
+        prob_bg = 1  # make number of bg pixels ~= fg pixels of 1 object
     else:
         prob_bg = float('inf')
 
-    positioning='grid'
+    positioning = 'grid'
 
     # mnist_trn = loader.MNIST(path, dataset_slice=(0, 5000))
     # mnist_trn.load_standard('training')
+    imshape = (3, 28*2, 28*2)
+    texturegen = TextureDispatcher()
+    texturegen.add_texturegen(0.25, SinusoidalGratings(shape=imshape))
+    texturegen.add_texturegen(0.75, WhiteNoiseTexture(
+        mean_dist=lambda: np.random.randint(256),
+        var_dist=lambda: np.random.gamma(1, 25),
+        shape=imshape,
+    ))
     mnist_trn = SegMNISTShapes(
-        mnist = SegMNIST.load_standard_MNIST('mnist-training', shuffle=False),
-        imshape = (3, 28*2, 28*2),
-        bg_pix_mul = prob_bg,
-        positioning = positioning,
+        mnist=load_standard_MNIST('mnist-training', shuffle=False),
+        imshape=imshape,
+        bg_pix_mul=prob_bg,
+        positioning=positioning,
+        texturegen=texturegen,
     )
-    mnist_trn.set_class_freq((1,1,1,1,1, 1,1,1,1,1, 3, 3))
+    mnist_trn.set_class_freq((1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3))
 
-    #mnist_val = loader.MNIST(path, dataset_slice=(5000, 6000))
-    #mnist_val.load_standard('training')
     mnist_val = SegMNISTShapes(
-        mnist = SegMNIST.load_standard_MNIST('mnist-validation', shuffle=False),
-        imshape = (3, 28*2, 28*2),
-        bg_pix_mul = prob_bg,
-        positioning = positioning,
+        mnist=load_standard_MNIST('mnist-validation', shuffle=False),
+        imshape=(3, 28*2, 28*2),
+        bg_pix_mul=prob_bg,
+        positioning=positioning,
     )
-    mnist_trn.set_class_freq((1,1,1,1,1, 1,1,1,1,1, 3, 3))
+    mnist_trn.set_class_freq((1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3))
 
     (hclsfiles_trn, hsegfiles_trn) = (
         generate_segmnist_shapes_x_images(dataset=mnist_trn,
