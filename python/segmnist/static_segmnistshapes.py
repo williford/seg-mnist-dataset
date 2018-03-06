@@ -14,6 +14,7 @@ import h5py
 from loader.mnist import load_standard_MNIST
 from segmnistshapes import SegMNISTShapes
 from textures import TextureDispatcher
+from textures import IntermixTexture
 from textures import WhiteNoiseTexture
 from textures import SinusoidalGratings
 
@@ -121,12 +122,21 @@ def generate_segmnist_shapes_all(cells_with_num,
     # mnist_trn.load_standard('training')
     imshape = (3, 28*2, 28*2)
     texturegen = TextureDispatcher()
-    texturegen.add_texturegen(0.25, SinusoidalGratings(shape=imshape))
-    texturegen.add_texturegen(0.75, WhiteNoiseTexture(
+    texturegen.add_texturegen(0.20, SinusoidalGratings(shape=imshape))
+    texturegen.add_texturegen(0.30, WhiteNoiseTexture(
         mean_dist=lambda: np.random.randint(256),
         var_dist=lambda: np.random.gamma(1, 25),
         shape=imshape,
     ))
+    randomtex = IntermixTexture()
+    randomtex.add_texturegen(0.20, SinusoidalGratings(shape=imshape))
+    randomtex.add_texturegen(0.30, WhiteNoiseTexture(
+        mean_dist=lambda: np.random.randint(256),
+        var_dist=lambda: np.random.gamma(1, 25),
+        shape=imshape,
+    ))
+    texturegen.add_texturegen(0.50, randomtex)
+
     mnist_trn = SegMNISTShapes(
         mnist=load_standard_MNIST('mnist-training', shuffle=False),
         imshape=imshape,

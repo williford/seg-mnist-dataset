@@ -24,6 +24,7 @@ from segmnist.segmnistshapes import RectangleGenerator
 from segmnist.textures import TextureDispatcher
 from segmnist.textures import WhiteNoiseTexture
 from segmnist.textures import SinusoidalGratings
+from segmnist.textures import IntermixTexture
 
 
 class SegMNISTShapesLayerSync(caffe.Layer):
@@ -82,10 +83,12 @@ class SegMNISTShapesLayerSync(caffe.Layer):
             shapes.append(RectangleGenerator())
 
         texturegen = TextureDispatcher()
+        gratings = None
         if 'pgratings' in params.keys() and params['pgratings'] > 0:
+            gratings = SinusoidalGratings(shape=self.imshape))
             texturegen.add_texturegen(
                 params['pgratings'],
-                SinusoidalGratings(shape=self.imshape))
+                gratings)
 
         defaultTexture = WhiteNoiseTexture(
             mean_dist=lambda: np.random.randint(256),
@@ -96,6 +99,19 @@ class SegMNISTShapesLayerSync(caffe.Layer):
             texturegen.add_texturegen(
                 params['pwhitenoise'],
                 defaultTexture)
+
+        if 'pintermixed' in params.keys() and params['pintermixed'] > 0:
+            randomtex = IntermixTexture()
+            randomtex.add_texturegen(
+                params['pgratings'] if 'pgratings' in params.keys() else 0,
+                gratings)
+            randomtex.add_texturegen(
+                params['pwhitenoise'] if 'pwhitenoise' in params.keys() else 0,
+                defaultTexture)
+
+            texturegen.add_texturegen(
+                params['pintermixed'],
+                randomtex)
 
         self.batch_loader = SegMNISTShapes(
             self.mnist,

@@ -34,8 +34,7 @@ class SinusoidalGratings(TextureGenerator):
                 'generate() must only be called after new_example()!')
         orientation = self._orientations[min(self._curr_texture_num, 1)]
         phase = np.random.uniform(0, math.pi)
-        wavelength = np.random.uniform(2, 8)
-        # def random_color_texture(self, shape, mean, var):
+        wavelength = np.mean(np.random.uniform(1, 5, 4)) # mean = 3
         self._curr_texture_num += 1
 
         # "Bounding box"
@@ -46,15 +45,17 @@ class SinusoidalGratings(TextureGenerator):
 
         (x, y) = np.meshgrid(np.arange(xmin, xmax), np.arange(ymin, ymax))
 
-        # Rotation (around center of image) - doesn't this assume center is 0??
+        # Gratings start horizontal, then rotates clockwise
         # The value along the x of the grating is constant
-        y_theta = (x * np.sin(orientation) +
-                   y * np.cos(orientation))
+        # x_rot = x * np.cos(orientation) + y * np.sin(orientation)
+        y_rot = -x * np.sin(orientation) + y * np.cos(orientation)
 
-        # initially make gratings vary from 0 to 1
-        gratings = (np.cos(2 * np.pi / wavelength * y_theta + phase) + 1) / 2
+        grat = np.cos(2 * np.pi / wavelength * y_rot + phase)
+        grat = (grat + 1) / 2  # convert range from (-1, 1) to (0, 1)
+        grat = grat * (self._valid_range[1] - self._valid_range[0]) - self._valid_range[0]
+
         # make gratings between min_brightness and max_brightness (valid_range[0] and [1])
-        gratings = gratings * (self._valid_range[1] - self._valid_range[0]) - self._valid_range[0]
-        return(np.broadcast_to(gratings, self._shape))
+
+        return(np.broadcast_to(grat, self._shape))
 
 
