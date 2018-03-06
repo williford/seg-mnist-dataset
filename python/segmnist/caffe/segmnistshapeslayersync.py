@@ -100,7 +100,7 @@ class SegMNISTShapesLayerSync(caffe.Layer):
                 params['pwhitenoise'],
                 defaultTexture)
 
-        if 'pintermixed' in params.keys() and params['pintermixed'] > 0:
+        if 'pintermix' in params.keys() and params['pintermix'] > 0:
             randomtex = IntermixTexture()
             randomtex.add_texturegen(
                 params['pgratings'] if 'pgratings' in params.keys() else 0,
@@ -110,7 +110,7 @@ class SegMNISTShapesLayerSync(caffe.Layer):
                 defaultTexture)
 
             texturegen.add_texturegen(
-                params['pintermixed'],
+                params['pintermix'],
                 randomtex)
 
         self.batch_loader = SegMNISTShapes(

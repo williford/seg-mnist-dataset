@@ -1,12 +1,8 @@
 import random
-import itertools
-from . import loader
 from textures import WhiteNoiseTexture
 from . import mnist_generator
-import os
 import numpy as np
 import math
-import pdb
 from abc import ABCMeta
 
 
