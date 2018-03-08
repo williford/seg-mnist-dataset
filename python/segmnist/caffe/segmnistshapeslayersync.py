@@ -85,7 +85,7 @@ class SegMNISTShapesLayerSync(caffe.Layer):
         texturegen = TextureDispatcher()
         gratings = None
         if 'pgratings' in params.keys() and params['pgratings'] > 0:
-            gratings = SinusoidalGratings(shape=self.imshape))
+            gratings = SinusoidalGratings(shape=self.imshape)
             texturegen.add_texturegen(
                 params['pgratings'],
                 gratings)
