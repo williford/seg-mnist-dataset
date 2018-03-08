@@ -13,6 +13,7 @@ class SinusoidalGratings(TextureGenerator):
         self._curr_texture_num = 0
         self._orientations = None
         self._max_or = 2  # maximum number of orientations
+        self._wavelength = None
 
     def new_example(self, ntextures):
         """ Called once for every example """
@@ -23,6 +24,7 @@ class SinusoidalGratings(TextureGenerator):
         self._orientations = (
                 np.random.choice([math.pi/4, 3*math.pi/4], size=2, replace=False) +
                 np.random.uniform(-math.pi/4,math.pi/4))
+        self._wavelength = np.mean(np.random.uniform(2, 6, 2)) # mean = 4
 
     def generate(self):
         """ Called for every texture.
@@ -34,7 +36,6 @@ class SinusoidalGratings(TextureGenerator):
                 'generate() must only be called after new_example()!')
         orientation = self._orientations[min(self._curr_texture_num, 1)]
         phase = np.random.uniform(0, math.pi)
-        wavelength = np.mean(np.random.uniform(1, 5, 4)) # mean = 3
         self._curr_texture_num += 1
 
         # "Bounding box"
@@ -50,7 +51,7 @@ class SinusoidalGratings(TextureGenerator):
         # x_rot = x * np.cos(orientation) + y * np.sin(orientation)
         y_rot = -x * np.sin(orientation) + y * np.cos(orientation)
 
-        grat = np.cos(2 * np.pi / wavelength * y_rot + phase)
+        grat = np.cos(2 * np.pi / self._wavelength * y_rot + phase)
         grat = (grat + 1) / 2  # convert range from (-1, 1) to (0, 1)
         grat = grat * (self._valid_range[1] - self._valid_range[0]) - self._valid_range[0]
 
