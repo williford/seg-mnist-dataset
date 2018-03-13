@@ -80,6 +80,11 @@ class FGModTexture(TextureGenerator):
 
         (x, y) = np.meshgrid(np.arange(xmin, xmax), np.arange(ymin, ymax))
 
+        colors = np.stack([np.random.uniform(
+            self._colors[0][c], self._colors[1][c],
+            size=self._numlines,
+        ) for c in range(3)])
+
         # centers
         if vert:
             x0 = np.random.choice(
@@ -90,6 +95,12 @@ class FGModTexture(TextureGenerator):
                 size=self._numlines, replace=True)
             x1 = x0
             y1 = y0 + self._linelen
+
+            y0 = np.maximum(0, y0)
+            y1 = np.minimum(ymax, y1)
+
+            for i in range(self._numlines):
+                texture[:, y0[i]:y1[i], x0[i]] = colors[:, i].reshape((3, 1))
         else:  # horizontal
             x0 = np.random.choice(
                 np.arange(xmin - self._linelen, xmax, self._step),
@@ -100,15 +111,11 @@ class FGModTexture(TextureGenerator):
             x1 = x0 + self._linelen
             y1 = y0
 
-        for i in range(self._numlines):
-            win = ((x >= min(x0[i], x1[i])) &
-                   (x <= max(x0[i], x1[i])) &
-                   (y >= min(y0[i], y1[i])) &
-                   (y <= max(y0[i], y1[i])))
+            x0 = np.maximum(0, x0)
+            x1 = np.minimum(xmax, x1)
 
-            color = np.random.uniform(self._colors[0],
-                                      self._colors[1]).reshape([3, 1])
-            texture[:, win] = color
+            for i in range(self._numlines):
+                texture[:, y0[i], x0[i]:x1[i]] = colors[:, i].reshape((3, 1))
 
         self._curr_texture_num += 1
         return(texture)

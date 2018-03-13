@@ -220,6 +220,7 @@ def generate_segmnist_shapes_x_images(dataset, prefix, output_dir, mode, num_exa
         dataset.set_min_digits(ncells)
         dataset.set_max_digits(ncells)
         (new_data, cls_label, new_seg_label) = dataset.create_example()
+        # continue # time the creation of the data
 
         (group, group_remainder) = divmod(stimulus_number, 1000)
         if group_remainder == 0:
