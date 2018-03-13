@@ -356,3 +356,5 @@ def generate_segmnist_shapes_x_images(dataset, prefix, output_dir, mode, num_exa
                          sep=' ', header=False, index=False)
 
     return (hclsfiles, hsegfiles)
+        # slope is -1 or 1 (orientation pi/4 or 3
+        # self._slopes = np.random.choice([-1, 1], size=2, replace=False)

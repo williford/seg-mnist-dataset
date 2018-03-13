@@ -1,20 +1,9 @@
 # imports
-import json
-import time
-import pickle
-import scipy.misc
-import skimage.io
 import caffe
 import ast
 
 import numpy as np
-import os.path as osp
-
-from xml.dom import minidom
 import random
-from random import shuffle
-from threading import Thread
-from PIL import Image
 
 from segmnist import SegMNISTShapes
 from segmnist.loader.mnist import load_standard_MNIST
@@ -24,6 +13,7 @@ from segmnist.segmnistshapes import RectangleGenerator
 from segmnist.textures import TextureDispatcher
 from segmnist.textures import WhiteNoiseTexture
 from segmnist.textures import SinusoidalGratings
+from segmnist.textures import FGModTexture
 from segmnist.textures import IntermixTexture
 
 
@@ -90,6 +80,13 @@ class SegMNISTShapesLayerSync(caffe.Layer):
                 params['pgratings'],
                 gratings)
 
+        fgmod = None
+        if 'pfgmod' in params.keys() and params['pfgmod'] > 0:
+            fgmod = FGModTexture(shape=self.imshape)
+            texturegen.add_texturegen(
+                params['pfgmod'],
+                fgmod)
+
         defaultTexture = WhiteNoiseTexture(
             mean_dist=lambda: np.random.randint(256),
             var_dist=lambda: np.random.gamma(1, 25),
@@ -102,12 +99,18 @@ class SegMNISTShapesLayerSync(caffe.Layer):
 
         if 'pintermix' in params.keys() and params['pintermix'] > 0:
             randomtex = IntermixTexture()
-            randomtex.add_texturegen(
-                params['pgratings'] if 'pgratings' in params.keys() else 0,
-                gratings)
-            randomtex.add_texturegen(
-                params['pwhitenoise'] if 'pwhitenoise' in params.keys() else 0,
-                defaultTexture)
+            if gratings is not None:
+                randomtex.add_texturegen(
+                    params['pgratings'],
+                    gratings)
+            if fgmod is not None:
+                randomtex.add_texturegen(
+                    params['pfgmod'],
+                    fgmod)
+            if 'pwhitenoise' in params.keys() and params['pwhitenoise'] > 0:
+                randomtex.add_texturegen(
+                    params['pwhitenoise'],
+                    defaultTexture)
 
             texturegen.add_texturegen(
                 params['pintermix'],
@@ -172,33 +175,12 @@ class SegMNISTShapesLayerSync(caffe.Layer):
         (img_data, cls_label, seg_label) = (
             self.batch_loader.create_batch(self.batch_size))
         top[0].data[...] = img_data
-        if len(top) == 3:  # tops: (data, cls-label, seg-label), to-do: deprecate
-            print('Using 3 tops for SegMNISTShapesLayerSync python layer '
-                  'is deprecated!\n\n')
 
-            top[1].data.fill(0)
+        if len(top) == 3:  # tops: (data, cls-label, seg-label)
+            assert False, (
+                'Using 3 tops for SegMNISTShapesLayerSync python layer '
+                'is deprecated!\n\n')
 
-            # set default values to be background
-            # (used for the digits with other labels)
-            top[2].data.fill(0)
-
-            # for each example in batch
-            for n in range(cls_label.shape[0]):
-                # get indices (==labels) of classes that are in image
-                labels = np.flatnonzero(cls_label[n])
-
-                # randomly pick one of the labels
-                lbl = random.sample(labels, 1)[0]
-                top[1].data[n, lbl, 0, 0] = 1
-
-                # retain masked out regions
-                # (if mask_bg, this includes the original background)
-                top[2].data[n, 0][seg_label[n, 0] == 255] = 255
-
-                # set current label to foreground
-                ind0 = seg_label[n, 0] == 255
-                ind = seg_label[n, 0] == (lbl + 1)
-                top[2].data[n, 0][seg_label[n, 0] == (lbl + 1)] = 1
         else:  # tops: (data, cls-label, [attend-label, seg-label])
             assert len(top) == 2 or len(top) == 4
             # cls_label should encode all classes
@@ -225,8 +207,6 @@ class SegMNISTShapesLayerSync(caffe.Layer):
                     top[3].data[n, 0][seg_label[n, 0] == 255] = 255
 
                     # set current label to foreground
-                    ind0 = seg_label[n, 0] == 255
-                    ind = seg_label[n, 0] == (lbl + 1)
                     top[3].data[n, 0][seg_label[n, 0] == (lbl + 1)] = 1
 
     def reshape(self, bottom, top):
@@ -259,8 +239,9 @@ def print_info(name, params):
     """
     Output some info regarding the class
     """
-    print "{} initialized for dataset: {}, with bs: {}, im_shape: {}.".format(
-        name,
-        params['mnist_dataset'],
-        params['batch_size'],
-        params['im_shape'])
+    print("{} initialized for dataset: {}, "
+          "with bs: {}, im_shape: {}.".format(
+               name,
+               params['mnist_dataset'],
+               params['batch_size'],
+               params['im_shape']))
