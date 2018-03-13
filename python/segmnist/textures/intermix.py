@@ -25,15 +25,15 @@ class IntermixTexture(TextureGenerator):
             self._example_gen = True
         return
 
-    def generate(self):
+    def generate(self, mask=None):
         """ Called for every texture.
         """
         # choose which generator to use for each example,
         curr_textgen = np.random.choice(self._textgens,
-                                              p=self._probtextgen)
+                                        p=self._probtextgen)
         curr_textgen.new_example(1)
 
-        return curr_textgen.generate()
+        return curr_textgen.generate(mask)
 
     def generators(self):
         return self._textgens

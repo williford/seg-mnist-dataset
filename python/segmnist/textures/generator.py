@@ -10,7 +10,11 @@ class TextureGenerator(object):
         pass
 
     @abstractmethod
-    def generate(self, shape):
-        """ Called for every texture """
-        # def random_color_texture(self, shape, mean, var):
+    def generate(self, mask=None):
+        """ Called for every texture
+
+        Args:
+            mask: mask that will be used to apply the texture (doesn't need to
+                be used).
+        """
         pass

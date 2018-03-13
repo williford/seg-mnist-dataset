@@ -1,6 +1,7 @@
 from generator import TextureGenerator
 import numpy as np
 
+
 class TextureDispatcher(TextureGenerator):
     """ Contains other textures. For every example / image, it chooses a
         texture generator to use for that example.
@@ -31,10 +32,14 @@ class TextureDispatcher(TextureGenerator):
                                               p=self._probtextgen)
         return self._curr_textgen.new_example(ntextures)
 
-    def generate(self):
+    def generate(self, mask=None):
         """ Called for every texture.
+
+        Args:
+            mask: mask that will be used to apply the texture (doesn't need to
+                be used).
         """
-        return self._curr_textgen.generate()
+        return self._curr_textgen.generate(mask)
 
     def generators(self):
         return self._textgens

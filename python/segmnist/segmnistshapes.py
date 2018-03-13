@@ -65,7 +65,7 @@ class RectangleShape(object):
         #    image.shape,
         #    mean=np.random.randint(256, size=image.shape[0]),
         #    var=np.random.gamma(1, 25, size=image.shape[0]))
-        texture = self._texturegen.generate()
+        texture = self._texturegen.generate(self._shape_mask)
 
         image[:] = np.multiply(image, 1.0 - self._shape_mask) + np.multiply(texture, self._shape_mask)
 
@@ -199,6 +199,7 @@ class SegMNISTShapes(object):
         if positioning == 'random':
             self._positioning = mnist_generator.RandomPositioning()
         elif positioning == 'grid':
+            assert False, 'grid positioning disabled (at least for now)'
             self._positioning = mnist_generator.GridPositioning((2, 2))
 
         self._scale_range = (1.0, 1.0)
@@ -295,8 +296,8 @@ class SegMNISTShapes(object):
             self._texturegen.new_example(nobj)
 
             # create background texture
-            img_data[n] = self._texturegen.generate()
             seg_label[n] = np.zeros(shape=self._imshape[1:])
+            img_data[n] = self._texturegen.generate()
 
             labels = set()
             # Add objects

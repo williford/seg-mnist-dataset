@@ -16,7 +16,8 @@ from segmnistshapes import SegMNISTShapes
 from textures import TextureDispatcher
 from textures import IntermixTexture
 from textures import WhiteNoiseTexture
-from textures import SinusoidalGratings
+# from textures import SinusoidalGratings
+from textures import FGModTexture
 
 
 def mkdirs(path):
@@ -60,9 +61,10 @@ def generate_segmnist_shapes_bgmask(mask_bg, output_dir):
     filelists = list()
     for ncells in range(1, 4):  # 1-3
         filelists.append(
-            generate_segmnist_shapes_all(cells_with_num=ncells,
-                                                      mask_bg=mask_bg,
-                                                      output_dir=output_dir))
+            generate_segmnist_shapes_all(
+                cells_with_num=ncells,
+                mask_bg=mask_bg,
+                output_dir=output_dir))
 
     if mask_bg:
         mask_bg_str = 'with_bgmask'
@@ -84,8 +86,9 @@ def generate_segmnist_shapes_bgmask(mask_bg, output_dir):
          mask_bg_str)]
 
     for (task, mode, filenames, mask_bg_str) in filelists2:
-        fn = "%s/%s-segmnist-shapes-any_%s.%s.txt" % (output_dir, task, mask_bg_str, mode)
-        print fn
+        fn = "%s/%s-segmnist-shapes-any_%s.%s.txt" % (
+            output_dir, task, mask_bg_str, mode)
+        print(fn)
         with open(fn, 'w') as f:
             for line in filenames:
                 f.write(line + '\n')
@@ -116,20 +119,21 @@ def generate_segmnist_shapes_all(cells_with_num,
     else:
         prob_bg = float('inf')
 
-    positioning = 'grid'
+    positioning = 'random'
 
     # mnist_trn = loader.MNIST(path, dataset_slice=(0, 5000))
     # mnist_trn.load_standard('training')
     imshape = (3, 28*2, 28*2)
+    # texturegen = FGModTexture(shape=imshape)
     texturegen = TextureDispatcher()
-    texturegen.add_texturegen(0.20, SinusoidalGratings(shape=imshape))
+    texturegen.add_texturegen(0.20, FGModTexture(shape=imshape))
     texturegen.add_texturegen(0.30, WhiteNoiseTexture(
         mean_dist=lambda: np.random.randint(256),
         var_dist=lambda: np.random.gamma(1, 25),
         shape=imshape,
     ))
     randomtex = IntermixTexture()
-    randomtex.add_texturegen(0.20, SinusoidalGratings(shape=imshape))
+    randomtex.add_texturegen(0.20, FGModTexture(shape=imshape))
     randomtex.add_texturegen(0.30, WhiteNoiseTexture(
         mean_dist=lambda: np.random.randint(256),
         var_dist=lambda: np.random.gamma(1, 25),

@@ -10,7 +10,7 @@ class WhiteNoiseTexture(TextureGenerator):
         self._valid_range = valid_range
         self._shape = shape
 
-    def generate(self):
+    def generate(self, _=None):
 
         shape0 = list(self._shape)
         shape0[0] = 1

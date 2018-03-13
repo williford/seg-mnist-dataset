@@ -22,11 +22,14 @@ class SinusoidalGratings(TextureGenerator):
         # pick a random orientation first then add offset
         # orientations between 0 and pi
         self._orientations = (
-                np.random.choice([math.pi/4, 3*math.pi/4], size=2, replace=False) +
-                np.random.uniform(-math.pi/4,math.pi/4))
-        self._wavelength = np.mean(np.random.uniform(2, 6, 2)) # mean = 4
+                np.random.choice([math.pi/4, 3*math.pi/4], size=2,
+                                 replace=False))
+        # np.random.uniform(-math.pi/4,math.pi/4))
+        self._wavelength = np.mean(np.random.uniform(2, 6, 2))  # mean = 4
+        # self._wavelength = 4
+        self._wavelength = 4 * math.sqrt(2)
 
-    def generate(self):
+    def generate(self, _=None):
         """ Called for every texture.
         The first call after new_example is assumed to the be background and
         every other call a foreground. The background is set to be a different
@@ -52,6 +55,9 @@ class SinusoidalGratings(TextureGenerator):
         y_rot = -x * np.sin(orientation) + y * np.cos(orientation)
 
         grat = np.cos(2 * np.pi / self._wavelength * y_rot + phase)
+        clip_ratio = 1
+        grat = grat / clip_ratio
+        grat = np.maximum(-1.0, np.minimum(1.0, grat))
         grat = (grat + 1) / 2  # convert range from (-1, 1) to (0, 1)
         grat = grat * (self._valid_range[1] - self._valid_range[0]) - self._valid_range[0]
 
