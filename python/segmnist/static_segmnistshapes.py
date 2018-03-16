@@ -124,22 +124,23 @@ def generate_segmnist_shapes_all(cells_with_num,
     # mnist_trn = loader.MNIST(path, dataset_slice=(0, 5000))
     # mnist_trn.load_standard('training')
     imshape = (3, 28*2, 28*2)
-    # texturegen = FGModTexture(shape=imshape)
     texturegen = TextureDispatcher()
-    texturegen.add_texturegen(0.20, FGModTexture(shape=imshape))
-    texturegen.add_texturegen(0.30, WhiteNoiseTexture(
-        mean_dist=lambda: np.random.randint(256),
-        var_dist=lambda: np.random.gamma(1, 25),
-        shape=imshape,
-    ))
-    randomtex = IntermixTexture()
-    randomtex.add_texturegen(0.20, FGModTexture(shape=imshape))
-    randomtex.add_texturegen(0.30, WhiteNoiseTexture(
-        mean_dist=lambda: np.random.randint(256),
-        var_dist=lambda: np.random.gamma(1, 25),
-        shape=imshape,
-    ))
-    texturegen.add_texturegen(0.50, randomtex)
+    texturegen.add_texturegen(0.20, FGModTexture(
+        shape=imshape, independent_colors=1, texture_alpha=0.0))
+    # texturegen.add_texturegen(0.30, WhiteNoiseTexture(
+    #     mean_dist=lambda: np.random.randint(256),
+    #     var_dist=lambda: np.random.gamma(1, 25),
+    #     shape=imshape,
+    # ))
+    # randomtex = IntermixTexture()
+    # randomtex.add_texturegen(0.20, FGModTexture(
+    #     shape=imshape, independent_colors=1))
+    # randomtex.add_texturegen(0.30, WhiteNoiseTexture(
+    #     mean_dist=lambda: np.random.randint(256),
+    #     var_dist=lambda: np.random.gamma(1, 25),
+    #     shape=imshape,
+    # ))
+    # texturegen.add_texturegen(0.50, randomtex)
 
     mnist_trn = SegMNISTShapes(
         mnist=load_standard_MNIST('mnist-training', shuffle=False),

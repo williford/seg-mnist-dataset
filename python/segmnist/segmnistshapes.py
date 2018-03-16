@@ -293,7 +293,7 @@ class SegMNISTShapes(object):
             #   (for finite sets)
             self._positioning.reset()
             # texture generator also needs to be reset
-            self._texturegen.new_example(nobj)
+            self._texturegen.new_example(nobj+1)
 
             # create background texture
             seg_label[n] = np.zeros(shape=self._imshape[1:])

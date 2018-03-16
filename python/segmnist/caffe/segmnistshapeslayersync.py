@@ -82,7 +82,17 @@ class SegMNISTShapesLayerSync(caffe.Layer):
 
         fgmod = None
         if 'pfgmod' in params.keys() and params['pfgmod'] > 0:
-            fgmod = FGModTexture(shape=self.imshape)
+            if 'fgmod_min_area' in params.keys():
+                min_area = params['fgmod_min_area']
+            else:
+                min_area = self.imshape[0] * self.imshape[1] / 16
+
+            fgmod = FGModTexture(
+                shape=self.imshape,
+                independent_colors=params['fgmod_indepcols'],
+                texture_alpha=params['fgmod_texalpha'],
+                min_area_texture=min_area,
+            )
             texturegen.add_texturegen(
                 params['pfgmod'],
                 fgmod)
