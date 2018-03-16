@@ -126,21 +126,27 @@ def generate_segmnist_shapes_all(cells_with_num,
     imshape = (3, 28*2, 28*2)
     texturegen = TextureDispatcher()
     texturegen.add_texturegen(0.20, FGModTexture(
-        shape=imshape, independent_colors=1, texture_alpha=0.0))
-    # texturegen.add_texturegen(0.30, WhiteNoiseTexture(
-    #     mean_dist=lambda: np.random.randint(256),
-    #     var_dist=lambda: np.random.gamma(1, 25),
-    #     shape=imshape,
-    # ))
-    # randomtex = IntermixTexture()
-    # randomtex.add_texturegen(0.20, FGModTexture(
-    #     shape=imshape, independent_colors=1))
-    # randomtex.add_texturegen(0.30, WhiteNoiseTexture(
-    #     mean_dist=lambda: np.random.randint(256),
-    #     var_dist=lambda: np.random.gamma(1, 25),
-    #     shape=imshape,
-    # ))
-    # texturegen.add_texturegen(0.50, randomtex)
+        shape=imshape,
+        independent_colors=1,
+        texture_alpha=0.0,
+    ))
+    texturegen.add_texturegen(0.30, WhiteNoiseTexture(
+        mean_dist=lambda: np.random.randint(256),
+        var_dist=lambda: np.random.gamma(1, 25),
+        shape=imshape,
+    ))
+    randomtex = IntermixTexture()
+    randomtex.add_texturegen(0.20, FGModTexture(
+        shape=imshape,
+        independent_colors=1,
+        texture_alpha=0.0,
+    ))
+    randomtex.add_texturegen(0.30, WhiteNoiseTexture(
+        mean_dist=lambda: np.random.randint(256),
+        var_dist=lambda: np.random.gamma(1, 25),
+        shape=imshape,
+    ))
+    texturegen.add_texturegen(0.50, randomtex)
 
     mnist_trn = SegMNISTShapes(
         mnist=load_standard_MNIST('mnist-training', shuffle=False),
@@ -149,7 +155,8 @@ def generate_segmnist_shapes_all(cells_with_num,
         positioning=positioning,
         texturegen=texturegen,
     )
-    mnist_trn.set_class_freq((1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3))
+    #mnist_trn.set_class_freq((1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3))
+    mnist_trn.set_class_freq((0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0))
 
     mnist_val = SegMNISTShapes(
         mnist=load_standard_MNIST('mnist-validation', shuffle=False),
@@ -157,7 +164,7 @@ def generate_segmnist_shapes_all(cells_with_num,
         bg_pix_mul=prob_bg,
         positioning=positioning,
     )
-    mnist_trn.set_class_freq((1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3))
+    mnist_val.set_class_freq((1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3))
 
     (hclsfiles_trn, hsegfiles_trn) = (
         generate_segmnist_shapes_x_images(dataset=mnist_trn,

@@ -316,6 +316,14 @@ class SegMNISTShapes(object):
                     labels.add(clsi)
                 else:
                     # clsi is ignored, class is determined by mnist iter
+                    assert (
+                        self._classprob is None or
+                        np.all(np.isclose(
+                            self._classprob[0],
+                            self._classprob[1:10]))), (
+                        'Digits are chosen with equal probability. '
+                        'Having unequal digit class probabilities is '
+                        'not supported.')
                     label = self._generate_digit(
                         img_data[n], seg_label[n, 0],
                         self._mnist_iter,

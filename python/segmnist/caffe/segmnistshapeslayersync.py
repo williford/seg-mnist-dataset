@@ -87,10 +87,21 @@ class SegMNISTShapesLayerSync(caffe.Layer):
             else:
                 min_area = self.imshape[0] * self.imshape[1] / 16
 
+            if 'fgmod_indepcols' in params.keys():
+                indepcols = params['fgmod_indepcols']
+            else:
+                # 0 means all textures have same color within example
+                indepcols = 0.0
+
+            # if 'fgmod_texalpha' in params.keys():
+            texalpha = params['fgmod_texalpha']
+            # else:
+            #     texalpha = 1.0  # 0=no textures, 1="full" texture
+
             fgmod = FGModTexture(
                 shape=self.imshape,
-                independent_colors=params['fgmod_indepcols'],
-                texture_alpha=params['fgmod_texalpha'],
+                independent_colors=indepcols,
+                texture_alpha=texalpha,
                 min_area_texture=min_area,
             )
             texturegen.add_texturegen(
@@ -149,6 +160,9 @@ class SegMNISTShapesLayerSync(caffe.Layer):
             self.batch_loader.set_scale_range(params['scale_range'])
         else:
             self.batch_loader.set_scale_range((0.5, 1.5))
+
+        if 'classfreq' in params.keys():
+            self.batch_loader.set_class_freq(params['classfreq'])
 
         # === reshape tops ===
         # since we use a fixed input image size, we can shape the data layer

@@ -1,6 +1,5 @@
 from generator import TextureGenerator
 import numpy as np
-from scipy import ndimage
 
 
 class FGModTexture(TextureGenerator):
@@ -86,6 +85,7 @@ class FGModTexture(TextureGenerator):
                     self._independent_colors * self._colors[tex] +
                     (1 - self._independent_colors) * self._colors[0])
         assert self._colors.ndim == 3
+        assert not np.all(self._colors[0, 0] == self._colors[0, 1])
 
     def generate(self, mask=None):
         """ Called for every texture.
@@ -101,7 +101,6 @@ class FGModTexture(TextureGenerator):
                 'generate() must only be called after new_example()!')
         if mask is not None and self._min_area_texture > 0:
             num_pixels = np.sum(mask >= 1)
-            # ndimage.morphology.binary_erosion(mask >= 1))
         else:
             num_pixels = self._shape[1] * self._shape[2]
 
@@ -163,7 +162,6 @@ class FGModTexture(TextureGenerator):
             for i in range(self._numlines):
                 texture[:, y0[i], x0[i]:x1[i]] = colors[:, i].reshape((3, 1))
 
-        texture[:] = ndimage.filters.gaussian_filter(texture, sigma=0.5)
-
         self._curr_texture_num += 1
+
         return(texture)
