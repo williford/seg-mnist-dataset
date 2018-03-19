@@ -128,7 +128,7 @@ def generate_segmnist_shapes_all(cells_with_num,
     texturegen.add_texturegen(0.20, FGModTexture(
         shape=imshape,
         independent_colors=1,
-        texture_alpha=lambda: np.random.uniform(0.2, 1.0),
+        texture_alpha=(0.2, 1.0),
     ))
     texturegen.add_texturegen(0.30, WhiteNoiseTexture(
         mean_dist=lambda: np.random.randint(256),
@@ -139,7 +139,7 @@ def generate_segmnist_shapes_all(cells_with_num,
     randomtex.add_texturegen(0.20, FGModTexture(
         shape=imshape,
         independent_colors=1,
-        texture_alpha=lambda: np.random.uniform(0.2, 1.0),
+        texture_alpha=(0.2, 1.0),
     ))
     randomtex.add_texturegen(0.30, WhiteNoiseTexture(
         mean_dist=lambda: np.random.randint(256),

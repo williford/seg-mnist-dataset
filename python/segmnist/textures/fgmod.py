@@ -83,7 +83,11 @@ class FGModTexture(TextureGenerator):
                 # allow texture alpha to be function
                 texture_alpha = self._texture_alpha()
             except TypeError:
-                texture_alpha = self._texture_alpha
+                # works for floats, tuple, etc.
+                texture_alpha = np.random.uniform(
+                    np.min(self._texture_alpha),
+                    np.max(self._texture_alpha),
+                )
 
             self._colors = (texture_alpha * self._colors +
                             (1-texture_alpha) * solid)
