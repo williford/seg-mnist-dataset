@@ -78,8 +78,15 @@ class FGModTexture(TextureGenerator):
             ])
             solid = np.random.uniform(low, high, size=3*ntextures).reshape(
                 ntextures, 1, 3)
-            self._colors = (self._texture_alpha * self._colors +
-                            (1-self._texture_alpha) * solid)
+            texture_alpha = self._texture_alpha
+            try:
+                # allow texture alpha to be function
+                texture_alpha = self._texture_alpha()
+            except TypeError:
+                texture_alpha = self._texture_alpha
+
+            self._colors = (texture_alpha * self._colors +
+                            (1-texture_alpha) * solid)
             for tex in range(1, len(self._colors)):
                 self._colors[tex] = (
                     self._independent_colors * self._colors[tex] +
