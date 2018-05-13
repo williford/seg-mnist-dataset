@@ -13,6 +13,7 @@ import pdb
 import h5py
 from loader.mnist import load_standard_MNIST
 from segmnistshapes import SegMNISTShapes
+from fgmodattendexperiment import FGModAttendExperiment
 from textures import TextureDispatcher
 from textures import IntermixTexture
 from textures import WhiteNoiseTexture
@@ -37,6 +38,9 @@ def generate_segmnist_shapes():
 
     output_dir = 'data'
     mkdirs("%s" % (output_dir))
+
+    generate_fgmodatt_stimset(
+        mask_bg=False, output_dir=output_dir)
 
     flist = generate_segmnist_shapes_bgmask(
         mask_bg=False, output_dir=output_dir)
@@ -96,15 +100,81 @@ def generate_segmnist_shapes_bgmask(mask_bg, output_dir):
     return filelists2
 
 
+def generate_fgmodatt_stimset(mask_bg=False,
+                              output_dir='.'):
+    prefix = 'fgmodatt-stimset'
+    if mask_bg:
+        prefix += '-bgmask'
+
+    output_dir = os.path.join(output_dir, prefix)
+
+    for subfolder in ['trn', 'val', 'tst']:
+        mkdirs("%s/%s" % (output_dir, subfolder))
+
+    if mask_bg:
+        prob_bg = 1  # make number of bg pixels ~= fg pixels of 1 object
+    else:
+        prob_bg = float('inf')
+
+    imshape = (3, 28*2, 28*2)
+    texturegen = TextureDispatcher()
+    texturegen.add_texturegen(1, FGModTexture(
+        shape=imshape,
+        independent_colors=1,
+        texture_alpha=(0.5, 0.5),
+    ))
+    trn = FGModAttendExperiment(
+        mnist=load_standard_MNIST('mnist-training', shuffle=False),
+        imshape=imshape,
+        bg_pix_mul=prob_bg,
+        texturegen=texturegen,
+    )
+    val = FGModAttendExperiment(
+        mnist=load_standard_MNIST('mnist-validation', shuffle=False),
+        imshape=imshape,
+        bg_pix_mul=prob_bg,
+        texturegen=texturegen,
+    )
+
+    cells_with_num = 3
+    (hclsfiles_trn, hsegfiles_trn) = (
+        generate_segmnist_shapes_x_images(
+            dataset=trn,
+            prefix=prefix,
+            output_dir=output_dir,
+            mode='trn',
+            num_examples=50,
+            cells_with_num=cells_with_num,
+            mask_bg=mask_bg,
+            seed_offset=0))
+
+    (hclsfiles_val, hsegfiles_val) = (
+        generate_segmnist_shapes_x_images(
+            dataset=val,
+            prefix=prefix,
+            output_dir=output_dir,
+            mode='val',
+            # num_examples=10 * 1000,
+            num_examples=50,
+            cells_with_num=cells_with_num,
+            mask_bg=mask_bg,
+            seed_offset=50 * 1000))
+    return dict(
+        trn_cls=hclsfiles_trn,
+        trn_seg=hsegfiles_trn,
+        val_cls=hclsfiles_val,
+        val_seg=hsegfiles_val,
+    )
+
+
 def generate_segmnist_shapes_all(cells_with_num,
                                  mask_bg=False,
                                  output_dir='.'):
-    if not mask_bg:
-        prefix = 'seg-mnist-shapes-%d' % cells_with_num
-        output_dir = os.path.join(output_dir, prefix)
-    else:
-        prefix = 'seg-mnist-shapes-%d-bgmask' % cells_with_num
-        output_dir = os.path.join(output_dir, prefix)
+    prefix = 'seg-mnist-shapes-%d' % cells_with_num
+    if mask_bg:
+        prefix += '-bgmask'
+
+    output_dir = os.path.join(output_dir, prefix)
 
     for subfolder in ['trn', 'val', 'tst']:
         mkdirs("%s/%s" % (output_dir, subfolder))
@@ -258,7 +328,7 @@ def generate_segmnist_shapes_x_images(dataset, prefix, output_dir, mode, num_exa
             stimulus_number)
         hclsfiles.append(fn_hdf5_cls)
 
-        if new_data.shape[0]==1:
+        if new_data.shape[0] == 1:
             # imsave is very picky about format of grayscale images
             img = new_data[0]
         else:
@@ -272,7 +342,7 @@ def generate_segmnist_shapes_x_images(dataset, prefix, output_dir, mode, num_exa
             if new_data.ndim == 3:
                 new_shape = (1,) + new_data.shape
             else:
-                new_shape = (1,1) + new_data.shape
+                new_shape = (1, 1) + new_data.shape
 
             f['data'] = new_data.reshape(new_shape)
 
@@ -311,7 +381,7 @@ def generate_segmnist_shapes_x_images(dataset, prefix, output_dir, mode, num_exa
                 if new_data.ndim == 3:
                     new_shape = (1,) + new_data.shape
                 else:
-                    new_shape = (1,1) + new_data.shape
+                    new_shape = (1, 1) + new_data.shape
 
                 f['data'] = new_data.reshape(new_shape)
                 f['cls-label'] = cls_label[:, :, np.newaxis, np.newaxis]

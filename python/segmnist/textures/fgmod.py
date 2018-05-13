@@ -40,8 +40,14 @@ class FGModTexture(TextureGenerator):
         self._independent_colors = independent_colors
         self._texture_alpha = texture_alpha
         self._min_area_texture = min_area_texture
-        self._fixed_colors = fixed_colors
-        self._fixed_orientations = fixed_orientations
+        self.set_colors(fixed_colors)
+        self.set_orientations(fixed_orientations)
+
+    def set_colors(self, colors):
+        self._fixed_colors = colors
+
+    def set_orientations(self, orientations):
+        self._fixed_orientations = orientations
         if self._fixed_orientations is not None:
             self._fixed_orientations = np.mod(self._fixed_orientations, np.pi)
 
@@ -64,7 +70,15 @@ class FGModTexture(TextureGenerator):
             self._vert = np.random.choice([0, 1], size=2, replace=False)
 
         if self._fixed_colors is not None:
-            self._colors = self._fixed_colors
+            if self._fixed_colors.ndim == 2:
+                self._colors = np.repeat(
+                    self._fixed_colors.reshape(
+                        [1] + list(self._fixed_colors.shape)),
+                    ntextures, axis=0)
+            else:
+                assert self._fixed_colors.ndim == 3, (
+                    'FGMod textures must have 2 or 3 dimensions.')
+                self._colors = self._fixed_colors
         else:
             low = np.min(self._valid_range)
             high = np.max(self._valid_range)

@@ -1,6 +1,7 @@
 import random
 from textures import WhiteNoiseTexture
 from . import mnist_generator
+import positioning as pos
 import numpy as np
 import math
 from abc import ABCMeta
@@ -10,7 +11,9 @@ class RectangleShape(object):
     def __init__(self, center, length1, length2, orientation, texturegen):
         """
         Args:
-            center: position of the center of the object
+            center: position of the center of the object (will be shifted by
+                half a pixel, so that the center will be in center of the
+                specified pixel.
             length1: length 1 of the rectangle
             length2: length 2 of the rectangle
             orientation: orientation of the rectangle (clockwise)
@@ -21,22 +24,14 @@ class RectangleShape(object):
         self._length2 = length2
         self._orientation = orientation
         self._texturegen = texturegen
-        self._corner_1 = [
-            self._center[0] - self._length1 / 2.0,
-            self._center[1] - self._length2 / 2.0,
-        ]
-        self._corner_2 = [
-            self._center[0] + self._length1 / 2.0,
-            self._center[1] + self._length2 / 2.0,
-        ]
         self._shape_mask = None
 
     def _calculate_shape_mask(self, imshape):
         yv, xv = np.meshgrid(
             np.arange(imshape[0]),
             np.arange(imshape[1]))
-        dist_x = xv - self._center[1]
-        dist_y = yv - self._center[0]
+        dist_x = xv - (self._center[1] + 0.5)
+        dist_y = yv - (self._center[0] + 0.5)
 
         # Rotation (around pos_yx)
         x_theta = (dist_x * np.cos(self._orientation) -
@@ -46,8 +41,8 @@ class RectangleShape(object):
                    dist_y * np.cos(self._orientation))
 
         mask = np.minimum(
-            self._length1 / 2.0 - abs(x_theta),
-            self._length2 / 2.0 - abs(y_theta))
+            self._length1 / 2.0 + 0.5 - abs(x_theta),
+            self._length2 / 2.0 + 0.5 - abs(y_theta))
         mask = np.maximum(0.0, mask)
         mask = np.minimum(1.0, mask)
         return mask
@@ -61,22 +56,26 @@ class RectangleShape(object):
     def draw_shape_image(self, image):
         if self._shape_mask is None:
             self._shape_mask = self._calculate_shape_mask(image.shape[1:])
-        #texture = self._texturegen(
-        #    image.shape,
-        #    mean=np.random.randint(256, size=image.shape[0]),
-        #    var=np.random.gamma(1, 25, size=image.shape[0]))
+        # texture = self._texturegen(
+        #     image.shape,
+        #     mean=np.random.randint(256, size=image.shape[0]),
+        #     var=np.random.gamma(1, 25, size=image.shape[0]))
         texture = self._texturegen.generate(self._shape_mask)
 
-        image[:] = np.multiply(image, 1.0 - self._shape_mask) + np.multiply(texture, self._shape_mask)
+        image[:] = (
+            np.multiply(image, 1.0 - self._shape_mask) +
+            np.multiply(texture, self._shape_mask))
 
 
 class SquareShape(RectangleShape):
     def __init__(self, center, diameter, orientation, texturegen):
-        super(SquareShape, self).__init__(center, diameter, diameter, orientation, texturegen)
+        super(SquareShape, self).__init__(
+            center, diameter, diameter, orientation, texturegen)
 
 
 class ShapeGenerator(object):
     __metaclass__ = ABCMeta
+
     def __init__(self):
         self._frame = None
         self._max_ratio_outside = None  # express as ratio of diameter
@@ -102,8 +101,9 @@ class ShapeGenerator(object):
 
 
 class RectangleGenerator(ShapeGenerator):
-    def __init__(self):
+    def __init__(self, orientation_gen=lambda: random.uniform(0, math.pi/2)):
         super(RectangleGenerator, self).__init__()
+        self._orientation_gen = orientation_gen
 
     def generate_shape(self, positioning, texturegen):
         ave_length = random.uniform(self._drange[0], self._drange[1])
@@ -127,7 +127,7 @@ class RectangleGenerator(ShapeGenerator):
         (center_x, center_y) = positioning.generate(
             self._frame, (length1, length2), center=True,
             max_ratio_outside=self._max_ratio_outside)
-        orientation = random.uniform(0, math.pi/2)
+        orientation = self._orientation_gen()
 
         return RectangleShape((center_y, center_x), length1, length2, orientation,
                            texturegen)
@@ -137,8 +137,9 @@ class RectangleGenerator(ShapeGenerator):
 
 
 class SquareGenerator(ShapeGenerator):
-    def __init__(self):
+    def __init__(self, orientation_gen=lambda: random.uniform(0, math.pi/2)):
         super(SquareGenerator, self).__init__()
+        self._orientation_gen = orientation_gen
 
     def generate_shape(self, positioning, texturegen):
         diameter = random.uniform(self._drange[0], self._drange[1])
@@ -154,7 +155,7 @@ class SquareGenerator(ShapeGenerator):
         # center_y0 = self._frame.y0 + diameter - self._max_ratio_outside * diameter
         # center_y1 = self._frame.y1 - diameter + self._max_ratio_outside * diameter
         # center_y = random.uniform(center_y0, center_y1)
-        orientation = random.uniform(0, math.pi/2)
+        orientation = self._orientation_gen()
 
         return SquareShape((center_y, center_x), diameter, orientation,
                            texturegen)
@@ -197,10 +198,10 @@ class SegMNISTShapes(object):
         self._generate_digit = mnist_generator.generate_digit
 
         if positioning == 'random':
-            self._positioning = mnist_generator.RandomPositioning()
+            self._positioning = pos.RandomPositioning()
         elif positioning == 'grid':
             assert False, 'grid positioning disabled (at least for now)'
-            self._positioning = mnist_generator.GridPositioning((2, 2))
+            self._positioning = pos.GridPositioning((2, 2))
 
         self._scale_range = (1.0, 1.0)
 
@@ -243,11 +244,11 @@ class SegMNISTShapes(object):
 
     def set_scale_range(self, scale_range):
         self._scale_range = scale_range
-        for shape in self._shapeGenerators:
-            shape.set_frame_boundary(self._imshape[1:3])
-            shape.set_diameter_range(
-                self._digit_size * self._scale_range[0],
-                self._digit_size * self._scale_range[1])
+        # for shape in self._shapeGenerators:
+        #     shape.set_frame_boundary(self._imshape[1:3])
+        #     shape.set_diameter_range(
+        #         self._digit_size * self._scale_range[0],
+        #         self._digit_size * self._scale_range[1])
 
         for shape in self._shapeGenerators:
             shape.set_frame_boundary(self._imshape[1:3], 0.25)
