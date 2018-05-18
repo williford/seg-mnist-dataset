@@ -3,8 +3,6 @@ from textures import FGModTexture
 from textures import WhiteNoiseTexture
 from . import mnist_generator
 import numpy as np
-import math
-from abc import ABCMeta
 from segmnistshapes import SquareGenerator
 from positioning import RandomPositioning
 
@@ -253,3 +251,6 @@ class FGModAttendExperiment(object):
             # img.show()
             # pdb.set_trace()
         return (img_data, cls_label, seg_label)
+
+    def set_class_freq(self, freq):
+        pass
