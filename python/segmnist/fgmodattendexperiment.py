@@ -85,11 +85,11 @@ class FGModAttendExperiment(object):
             ]),
         ]
 
-        diameter = 20
+        sq = 20
         self._squareGenerator = SquareGenerator(orientation_gen=lambda: 0)
         for shape in [self._squareGenerator]:
             shape.set_frame_boundary(imshape[1:3], 0.25)
-            shape.set_diameter_range(diameter, diameter)
+            shape.set_diameter_range(sq, sq)
 
         self._class_names = [str(i) for i in range(10)]
         for shapeGen in [self._squareGenerator]:
@@ -97,23 +97,81 @@ class FGModAttendExperiment(object):
         self._class_names.append('Rectangle')
 
         self._classprob = None  # uniform by default
+        ih = self._imshape[1]
+        iw = self._imshape[2]
         self._positioning = [
-            RandomPositioning(
-                range_pix_i=[self._imshape[1]/16+0.5,
-                             self._imshape[1]/16+0.5],
-                range_pix_j=[-diameter/2, self._imshape[2]-diameter/2]),
-            RandomPositioning(
-                range_pix_i=[self._imshape[1]*0.5,
-                             self._imshape[1]*0.5],
-                range_pix_j=[self._imshape[2]*0,
-                             self._imshape[2]*0],
-                            ),
-            RandomPositioning(
-                range_pix_i=[self._imshape[1]*0.5,
-                             self._imshape[1]*0.5],
-                range_pix_j=[self._imshape[2]*0.5,
-                             self._imshape[2]*0.5],
-                            ),
+            [  # Square is at top
+                RandomPositioning(
+                    range_pix_i=[ih/16+0.5,
+                                 ih/16+0.5],
+                    range_pix_j=[-sq/2, iw-sq/2]),
+                RandomPositioning(
+                    range_pix_i=[ih*0.5,
+                                 ih*0.5],
+                    range_pix_j=[iw*0,
+                                 iw*0],
+                                ),
+                RandomPositioning(
+                    range_pix_i=[ih*0.5,
+                                 ih*0.5],
+                    range_pix_j=[iw*0.5,
+                                 iw*0.5],
+                                ),
+            ],
+            [  # Square is at bottom
+                RandomPositioning(
+                    range_pix_i=[9.0*ih/16 + 0.5,
+                                 9.0*ih/16 + 0.5],
+                    range_pix_j=[-sq/2, iw-sq/2]),
+                RandomPositioning(
+                    range_pix_i=[ih*0,
+                                 ih*0],
+                    range_pix_j=[iw*0,
+                                 iw*0],
+                                ),
+                RandomPositioning(
+                    range_pix_i=[ih*0,
+                                 ih*0],
+                    range_pix_j=[iw*0.5,
+                                 iw*0.5],
+                                ),
+            ],
+            [  # Square is at left
+                RandomPositioning(
+                    range_pix_i=[-sq/2, iw-sq/2],
+                    range_pix_j=[iw/16+0.5,
+                                 iw/16+0.5]),
+                RandomPositioning(
+                    range_pix_i=[ih*0,
+                                 ih*0],
+                    range_pix_j=[iw*0.5,
+                                 iw*0.5],
+                                ),
+                RandomPositioning(
+                    range_pix_i=[ih*0.5,
+                                 ih*0.5],
+                    range_pix_j=[iw*0.5,
+                                 iw*0.5],
+                                ),
+            ],
+            [  # Square is at right
+                RandomPositioning(
+                    range_pix_i=[-sq/2, iw-sq/2],
+                    range_pix_j=[9.0*iw/16+0.5,
+                                 9.0*iw/16+0.5]),
+                RandomPositioning(
+                    range_pix_i=[ih*0,
+                                 ih*0],
+                    range_pix_j=[iw*0,
+                                 iw*0],
+                                ),
+                RandomPositioning(
+                    range_pix_i=[ih*0.5,
+                                 ih*0.5],
+                    range_pix_j=[iw*0,
+                                 iw*0],
+                                ),
+            ],
         ]
 
     def set_min_digits(self, val):
@@ -163,12 +221,15 @@ class FGModAttendExperiment(object):
             1, 1), dtype=np.uint8)
 
         for n in range(batch_size):
-            nobj = 3
+            # show square iff nobj == 3
+            nobj = random.sample([2, 3], 1)[0]
 
             # positioning object needs to be reset each example
             #   (for finite sets)
-            for pos in self._positioning:
-                pos.reset()
+            for pos_group in self._positioning:
+                for pos in pos_group:
+                    pos.reset()
+
             fgc, bgc = random.sample([0, 1], 2)
             # fg_cols, bg_cols = random.sample(self._fgmcolors, 2)
             fg_or, bg_or = random.sample(self._fgm_orientations, 2)
@@ -184,18 +245,19 @@ class FGModAttendExperiment(object):
             # create background texture
             seg_label[n] = np.zeros(shape=self._imshape[1:])
             img_data[n] = self._texturegens['bg'].generate()
-            mean_bg = img_data[n].mean()
-            mean_digit = self._digit_colors[fgc]._mean_dist()
+            # mean_bg = img_data[n].mean()
+            # mean_digit = self._digit_colors[fgc]._mean_dist()
 
+            pos_group = random.sample(self._positioning, 1)[0]
             labels = set()
             # Add objects
             # import pdb
             # pdb.set_trace()
             for iobj in range(nobj):
-                if iobj == 0:  # square
+                if iobj == 0 and nobj == 3:  # square
                     shape = (
                         self._squareGenerator.generate_shape(
-                            self._positioning[iobj],
+                            pos_group[iobj],
                             self._texturegens['fg']))
                     clsi = 10
                     shape.draw_label_segimage(seg_label[n, 0], clsi + 1)
@@ -207,7 +269,7 @@ class FGModAttendExperiment(object):
                         self._mnist_iter,
                         self._digit_colors[fgc],
                         #self._texturegens['digit'],
-                        positioning=self._positioning[iobj])
+                        positioning=pos_group[iobj + 3 - nobj])
                     labels.add(label)
 
             if self._bg_pix_mul > 0.0:  # should always be true
