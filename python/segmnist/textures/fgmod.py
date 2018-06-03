@@ -103,8 +103,11 @@ class FGModTexture(TextureGenerator):
                     np.max(self._texture_alpha),
                 )
 
+            # initially calculate colors independently
             self._colors = (texture_alpha * self._colors +
                             (1-texture_alpha) * solid)
+            # then treat "independent_colors" as alpha channel, with colors[0]
+            # being the "background"
             for tex in range(1, len(self._colors)):
                 self._colors[tex] = (
                     self._independent_colors * self._colors[tex] +
@@ -131,17 +134,16 @@ class FGModTexture(TextureGenerator):
 
         vert = self._vert[min(self._curr_texture_num, 1)]
 
-        if num_pixels < self._min_area_texture:
-            color = np.random.uniform(self._valid_range[0],
-                                      self._valid_range[1], size=3)
-            texture = np.ones(self._shape) * color.reshape([3, 1, 1])
-            return texture
-
         p = np.random.uniform()
+        # color of the "canvas", texture painted over
         color = (
             p * self._colors[self._curr_texture_num, 0].reshape([3, 1]) +
             (1 - p) * self._colors[self._curr_texture_num, 1].reshape([3, 1]))
         texture = np.ones(self._shape) * color.reshape([3, 1, 1])
+
+        if num_pixels < self._min_area_texture:
+            self._curr_texture_num += 1
+            return texture
 
         # "Bounding box"
         xmax = self._shape[2]
