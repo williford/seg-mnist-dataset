@@ -19,6 +19,7 @@ from textures import IntermixTexture
 from textures import WhiteNoiseTexture
 # from textures import SinusoidalGratings
 from textures import FGModTexture
+from caffe import SegMNISTShapesLayerSync
 
 
 def mkdirs(path):
@@ -32,6 +33,36 @@ def mkdirs(path):
             pass  # Ignore "File exists" errors
         else:
             raise
+
+
+def generate_caffe_segmnist_shapes():
+    caflayer = SegMNISTShapesLayerSync()
+    caflayer.param_str = (
+        "{ \'mnist_dataset\': \'mnist-training\', \'digit_positioning\':"
+        " \'random\', \'scale_range\': (0.9, 1.1), \'im_shape\': (3, 56, 56),"
+        " \'bg_pix_mul\': 1.0, \'batch_size\': 1, \'min_digits\': 2,"
+        " \'max_digits\': 3, \'nclasses\': 12, \'p_fgmodatt_set\': 0.05,"
+        " \'pwhitenoise\': 0.3, \'pgratings\': 0, \'pfgmod\': 0.8,"
+        " \'fgmod_indepcols\': 0, \'fgmod_texalpha\': (1.0),"
+        " \'fgmod_min_area\': 10, \'pintermix\': 0,"
+        " \'classfreq\': (1,1,1,1,1, 1,1,1,1,1, 3.0,3.0)"
+        "}"
+    )
+
+    batch_size = 1
+    nclasses = 12
+    im_shape = (3, 56, 56)
+    bottom = []
+    top = []
+    top[0] = np.zeros((batch_size, im_shape))
+    top[1] = np.zeros((batch_size, nclasses, 1, 1))
+    top[2] = np.zeros((batch_size, nclasses, 1, 1))
+    top[3] = np.zeros((batch_size, 1, im_shape[1:]))
+
+    caflayer.setup(bottom, top)
+    caflayer.forward(bottom, top)
+
+    pdb.set_trace()
 
 
 def generate_segmnist_shapes():
