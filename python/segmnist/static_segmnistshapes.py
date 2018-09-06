@@ -35,6 +35,13 @@ def mkdirs(path):
             raise
 
 
+class FakeBlob(object):
+    def __init__(self, data):
+        self.data = data
+    
+    def reshape(self, newshape):
+        self.data = self.data.reshape(newshape)
+
 def generate_caffe_segmnist_shapes():
     caflayer = SegMNISTShapesLayerSync()
     caflayer.param_str = (
@@ -54,10 +61,10 @@ def generate_caffe_segmnist_shapes():
     im_shape = (3, 56, 56)
     bottom = []
     top = []
-    top[0] = np.zeros((batch_size, im_shape))
-    top[1] = np.zeros((batch_size, nclasses, 1, 1))
-    top[2] = np.zeros((batch_size, nclasses, 1, 1))
-    top[3] = np.zeros((batch_size, 1, im_shape[1:]))
+    top.append(FakeBlob(np.zeros((batch_size,) + im_shape)))
+    top.append(FakeBlob(np.zeros((batch_size, nclasses, 1, 1))))
+    top.append(FakeBlob(np.zeros((batch_size, nclasses, 1, 1))))
+    top.append(FakeBlob(np.zeros((batch_size, 1) + im_shape[1:])))
 
     caflayer.setup(bottom, top)
     caflayer.forward(bottom, top)

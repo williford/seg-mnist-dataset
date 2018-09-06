@@ -1,5 +1,4 @@
 # imports
-import caffe
 import ast
 
 import numpy as np
@@ -18,8 +17,13 @@ from segmnist.textures import SinusoidalGratings
 from segmnist.textures import FGModTexture
 from segmnist.textures import IntermixTexture
 
+try:
+    import caffe
+    CaffeLayer = caffe.layer
+except ImportError:
+    CaffeLayer = object
 
-class SegMNISTShapesLayerSync(caffe.Layer):
+class SegMNISTShapesLayerSync(CaffeLayer):
     """
     This is a simple synchronous datalayer for training a network on the
     SegMNISTShapes dataset.
