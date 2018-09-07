@@ -38,25 +38,29 @@ def mkdirs(path):
 class FakeBlob(object):
     def __init__(self, data):
         self.data = data
-    
-    def reshape(self, newshape):
-        self.data = self.data.reshape(newshape)
+
+    def reshape(self, *newshape):
+        # self.data = self.data.reshape(newshape)
+        self.data = np.zeros(newshape)
 
 def generate_caffe_segmnist_shapes():
+    """
+     To-do: p_fgmodatt_set "takes over" if non-zero.
+    """
     caflayer = SegMNISTShapesLayerSync()
+    batch_size = 50
     caflayer.param_str = (
         "{ \'mnist_dataset\': \'mnist-training\', \'digit_positioning\':"
         " \'random\', \'scale_range\': (0.9, 1.1), \'im_shape\': (3, 56, 56),"
-        " \'bg_pix_mul\': 1.0, \'batch_size\': 1, \'min_digits\': 2,"
-        " \'max_digits\': 3, \'nclasses\': 12, \'p_fgmodatt_set\': 0.05,"
+        " \'bg_pix_mul\': 1.0, \'batch_size\': %d, \'min_digits\': 2,"
+        " \'max_digits\': 3, \'nclasses\': 12, \'p_fgmodatt_set\': 0.001,"
         " \'pwhitenoise\': 0.3, \'pgratings\': 0, \'pfgmod\': 0.8,"
         " \'fgmod_indepcols\': 0, \'fgmod_texalpha\': (1.0),"
         " \'fgmod_min_area\': 10, \'pintermix\': 0,"
         " \'classfreq\': (1,1,1,1,1, 1,1,1,1,1, 3.0,3.0)"
         "}"
-    )
+    ) % (batch_size)
 
-    batch_size = 1
     nclasses = 12
     im_shape = (3, 56, 56)
     bottom = []
@@ -69,8 +73,35 @@ def generate_caffe_segmnist_shapes():
     caflayer.setup(bottom, top)
     caflayer.forward(bottom, top)
 
-    pdb.set_trace()
+    output_dir = 'data'
+    mkdirs("%s" % (output_dir))
 
+    mode = 'trn'
+    prefix = 'fgmodatt-stimset'
+
+    for stimulus_number in range(batch_size):
+        (group, group_remainder) = divmod(
+            stimulus_number, 1000)
+        fn_img = "%s/%s/%d/%s_%s_%07d-image.png" % (
+            output_dir,
+            mode,
+            group,
+            prefix,
+            mode,
+            stimulus_number)
+        fn_seg = "%s/%s/%d/%s_%s_%07d-segm.png" % (
+            output_dir,
+            mode,
+            group,
+            prefix,
+            mode,
+            stimulus_number)
+
+        if group_remainder == 0:
+            mkdirs("%s/%s/%d" % (output_dir, mode, group))
+
+        scipy.misc.imsave(fn_img, top[0].data[stimulus_number].transpose([1,2,0]))
+        scipy.misc.imsave(fn_seg, top[3].data[stimulus_number, 0])
 
 def generate_segmnist_shapes():
 
@@ -85,16 +116,16 @@ def generate_segmnist_shapes():
     flist_bgmask = generate_segmnist_shapes_bgmask(
         mask_bg=0.85, output_dir=output_dir)
 
-    for (f1, f2) in zip(flist, flist_bgmask):
-        task = f1[0]
-        mode = f1[1]
-        with open("%s/%s-segmnist-shapes-any.%s.txt" %
-                  (output_dir, task, mode), 'w') as f:
-            for line in f1[2]:
-                f.write(line + '\n')
-            if task != 'classification' or flist_bgmask is None:
-                for line in f2[2]:
-                    f.write(line + '\n')
+    # for (f1, f2) in zip(flist, flist_bgmask):
+    #     task = f1[0]
+    #     mode = f1[1]
+    #     with open("%s/%s-segmnist-shapes-any.%s.txt" %
+    #               (output_dir, task, mode), 'w') as f:
+    #         for line in f1[2]:
+    #             f.write(line + '\n')
+    #         if task != 'classification' or flist_bgmask is None:
+    #             for line in f2[2]:
+    #                 f.write(line + '\n')
 
 
 def generate_segmnist_shapes_bgmask(mask_bg, output_dir):
@@ -127,13 +158,13 @@ def generate_segmnist_shapes_bgmask(mask_bg, output_dir):
          [fn for file_quad in filelists for fn in file_quad['val_seg']],
          mask_bg_str)]
 
-    for (task, mode, filenames, mask_bg_str) in filelists2:
-        fn = "%s/%s-segmnist-shapes-any_%s.%s.txt" % (
-            output_dir, task, mask_bg_str, mode)
-        print(fn)
-        with open(fn, 'w') as f:
-            for line in filenames:
-                f.write(line + '\n')
+    # for (task, mode, filenames, mask_bg_str) in filelists2:
+    #     fn = "%s/%s-segmnist-shapes-any_%s.%s.txt" % (
+    #         output_dir, task, mask_bg_str, mode)
+    #     print(fn)
+    #     with open(fn, 'w') as f:
+    #         for line in filenames:
+    #             f.write(line + '\n')
 
     return filelists2
 
