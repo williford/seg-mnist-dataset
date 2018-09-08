@@ -5,10 +5,12 @@ class StimSetDispatcher(object):
     def __init__(self,
                  stimsets,
                  stimset_probs,
+                 imshape,
                  ):
         assert len(stimsets) == len(stimset_probs)
         self._stimsets = stimsets
         self._stimset_probs = stimset_probs
+        self._imshape = imshape
 
     def set_min_digits(self, val):
         for stimset in self._stimsets:
@@ -50,10 +52,27 @@ class StimSetDispatcher(object):
         appears in image.
     """
     def create_batch(self, batch_size):
+        img_data = np.zeros((batch_size,
+                             self._imshape[0],  # nchannels
+                             self._imshape[1],  # 28 * self._gridH,
+                             self._imshape[2]), dtype=np.uint8)
+        seg_label = np.zeros((batch_size,
+                              1,  # single channel
+                              self._imshape[1],  # 28 * self._gridH,
+                              self._imshape[2]), dtype=np.uint8)
+        cls_label = np.zeros((batch_size,
+                              12,  # hard-coded - may need to be modifiable in the future
+                              # 10 + len(self._shapeGenerators),
+                              1, 1), dtype=np.uint8)
+
         sel = np.random.choice(
             self._stimsets, size=batch_size, replace=True, p=self._stimset_probs)
-        import pdb
-        pdb.set_trace()
+
+        for i in range(batch_size):
+            img, cls, seg = sel[i].create_batch(1)
+            img_data[i] = img[0]
+            cls_label[i] = cls[0]
+            seg_label[i] = seg[0]
 
         return (img_data, cls_label, seg_label)
 

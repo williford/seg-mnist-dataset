@@ -6,6 +6,7 @@ import random
 
 from segmnist import SegMNISTShapes
 from segmnist import FGModAttendExperiment
+from segmnist import StimSetDispatcher
 
 from segmnist.loader.mnist import load_standard_MNIST
 from segmnist.segmnistshapes import SquareGenerator
@@ -143,7 +144,7 @@ class SegMNISTShapesLayerSync(CaffeLayer):
                 params['pintermix'],
                 randomtex)
 
-        self.batch_loader = SegMNISTShapes(
+        general_stimset = SegMNISTShapes(
             self.mnist,
             imshape=self.imshape,
             bg_pix_mul=self.bg_pix_mul,
@@ -151,13 +152,21 @@ class SegMNISTShapesLayerSync(CaffeLayer):
             shapes=shapes,
             texturegen=texturegen,
         )
+
         if 'p_fgmodatt_set' in params.keys() and params['p_fgmodatt_set'] > 0:
-            self.batch_loader = FGModAttendExperiment(
-                self.mnist,
-                imshape=self.imshape,
-                bg_pix_mul=self.bg_pix_mul,
-                texturegen=texturegen,
+            fgmodatt_stimset = FGModAttendExperiment(
+                    self.mnist,
+                    imshape=self.imshape,
+                    bg_pix_mul=self.bg_pix_mul,
+                    texturegen=texturegen,
             )
+            self.batch_loader = StimSetDispatcher(
+                [fgmodatt_stimset, general_stimset],
+                [params['p_fgmodatt_set'], 1-params['p_fgmodatt_set']],
+                imshape=self.imshape,
+            )
+        else:
+            self.batch_loader = general_stimset
 
         # if no texture generated added via parameters, add white noise
         if len(texturegen.generators()) == 0:
