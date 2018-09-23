@@ -12,6 +12,7 @@ class FGModAttendExperiment(object):
                  imshape,  # include nchannels: C x H x W
                  bg_pix_mul,
                  texturegen,
+                 texture_color_overlap,
                  ):
         """
         bg_pix_mul: multiplier for the number of background pixels that are
@@ -74,13 +75,14 @@ class FGModAttendExperiment(object):
             self._texturegens['digit_dark'],
             self._texturegens['digit_white'],
         )
+        self._texture_color_overlap = texture_color_overlap
         self._fgmcolors = [
-            np.stack([
+            lambda overlap: np.stack([
                 np.full((3), 0),
-                np.full((3), 255.0*1/2),
+                np.full((3), 255.0*(1.0 + overlap)/2),
             ]),
-            np.stack([
-                np.full((3), 255.0*1/2),
+            lambda overlap: np.stack([
+                np.full((3), 255.0*(1.0 - overlap)/2),
                 np.full((3), 255.0),
             ]),
         ]
@@ -230,11 +232,16 @@ class FGModAttendExperiment(object):
                 for pos in pos_group:
                     pos.reset()
 
+            overlap = np.random.uniform(
+                np.min(self._texture_color_overlap),
+                np.max(self._texture_color_overlap),
+            )
+
             fgc, bgc = random.sample([0, 1], 2)
             # fg_cols, bg_cols = random.sample(self._fgmcolors, 2)
             fg_or, bg_or = random.sample(self._fgm_orientations, 2)
-            self._texturegens['bg'].set_colors(self._fgmcolors[bgc])
-            self._texturegens['fg'].set_colors(self._fgmcolors[fgc])
+            self._texturegens['bg'].set_colors(self._fgmcolors[bgc](overlap))
+            self._texturegens['fg'].set_colors(self._fgmcolors[fgc](overlap))
             self._texturegens['bg'].set_orientations(bg_or)
             self._texturegens['fg'].set_orientations(fg_or)
 

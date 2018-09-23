@@ -20,7 +20,7 @@ from segmnist.textures import IntermixTexture
 
 try:
     import caffe
-    CaffeLayer = caffe.layer
+    CaffeLayer = caffe.Layer
 except ImportError:
     CaffeLayer = object
 
@@ -154,11 +154,15 @@ class SegMNISTShapesLayerSync(CaffeLayer):
         )
 
         if 'p_fgmodatt_set' in params.keys() and params['p_fgmodatt_set'] > 0:
+            texture_color_overlap = (0, 0)
+            if 'fgmodatt_color_overlap' in params.keys():
+                texture_color_overlap = params['fgmodatt_color_overlap']
             fgmodatt_stimset = FGModAttendExperiment(
-                    self.mnist,
-                    imshape=self.imshape,
-                    bg_pix_mul=self.bg_pix_mul,
-                    texturegen=texturegen,
+                self.mnist,
+                imshape=self.imshape,
+                bg_pix_mul=self.bg_pix_mul,
+                texturegen=texturegen,
+                texture_color_overlap=texture_color_overlap,
             )
             self.batch_loader = StimSetDispatcher(
                 [fgmodatt_stimset, general_stimset],

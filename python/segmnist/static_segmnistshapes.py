@@ -54,6 +54,7 @@ def generate_caffe_segmnist_shapes():
         " \'random\', \'scale_range\': (0.9, 1.1), \'im_shape\': (3, 56, 56),"
         " \'bg_pix_mul\': 1.0, \'batch_size\': %d, \'min_digits\': 2,"
         " \'max_digits\': 3, \'nclasses\': 12, \'p_fgmodatt_set\': 0.5,"
+        " \'fgmodatt_color_overlap\': (0.5, 1), "
         " \'pwhitenoise\': 0.3, \'pgratings\': 0, \'pfgmod\': 0.8,"
         " \'fgmod_indepcols\': 0, \'fgmod_texalpha\': (1.0),"
         " \'fgmod_min_area\': 10, \'pintermix\': 0,"

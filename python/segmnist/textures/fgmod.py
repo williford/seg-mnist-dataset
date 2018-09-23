@@ -44,6 +44,8 @@ class FGModTexture(TextureGenerator):
         self.set_orientations(fixed_orientations)
 
     def set_colors(self, colors):
+        # may need to check ndim first ...
+        # assert colors is None or not np.all(colors[0, 0] == colors[0, 1])
         self._fixed_colors = colors
 
     def set_orientations(self, orientations):
