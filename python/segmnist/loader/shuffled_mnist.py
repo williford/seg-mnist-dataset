@@ -1,4 +1,4 @@
-from . import MNIST
+from loader import MNIST
 import random
 
 

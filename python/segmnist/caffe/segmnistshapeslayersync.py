@@ -18,11 +18,13 @@ from segmnist.textures import SinusoidalGratings
 from segmnist.textures import FGModTexture
 from segmnist.textures import IntermixTexture
 
-try:
-    import caffe
-    CaffeLayer = caffe.Layer
-except ImportError:
-    CaffeLayer = object
+# try:
+#     import caffe
+#     CaffeLayer = caffe.Layer
+# except ImportError:
+    # CaffeLayer = object
+
+CaffeLayer = object
 
 class SegMNISTShapesLayerSync(CaffeLayer):
     """
@@ -249,7 +251,7 @@ class SegMNISTShapesLayerSync(CaffeLayer):
                     labels = np.flatnonzero(cls_label[n])
 
                     # randomly pick one of the labels
-                    lbl = random.sample(labels, 1)[0]
+                    lbl = random.sample(list(labels), 1)[0]
                     top[2].data[n, lbl, 0, 0] = 1
 
                     # retain masked out regions

@@ -32,7 +32,7 @@ class FGModTexture(TextureGenerator):
         self._linelen = 10
         self._slopes = None
         self._vert = None
-        self._numlines = 50 * (shape[0] * shape[1] / self._linelen)
+        self._numlines = 50 * (shape[0] * shape[1] // self._linelen)
         self._step = 3
         self._step = 1
         assert 0 <= independent_colors <= 1, (
@@ -155,7 +155,7 @@ class FGModTexture(TextureGenerator):
 
         (x, y) = np.meshgrid(np.arange(xmin, xmax), np.arange(ymin, ymax))
 
-        p = np.random.uniform(size=self._numlines).reshape([1, self._numlines])
+        p = np.random.uniform(size=int(self._numlines)).reshape([1, self._numlines])
         colors = (p * self._colors[self._curr_texture_num, 0].reshape([3, 1]) +
                   (1 - p) * self._colors[self._curr_texture_num, 1].reshape([3, 1]))
 

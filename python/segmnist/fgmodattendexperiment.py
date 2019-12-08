@@ -1,7 +1,7 @@
 import random
 from textures import FGModTexture
 from textures import WhiteNoiseTexture
-from . import mnist_generator
+from segmnist import mnist_generator
 import numpy as np
 from segmnistshapes import SquareGenerator
 from positioning import RandomPositioning

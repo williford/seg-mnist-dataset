@@ -1,6 +1,6 @@
 import random
 from textures import WhiteNoiseTexture
-from . import mnist_generator
+from segmnist import mnist_generator
 import positioning as pos
 import numpy as np
 import math

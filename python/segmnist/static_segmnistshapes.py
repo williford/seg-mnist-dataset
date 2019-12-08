@@ -10,6 +10,7 @@ import itertools
 
 import pdb
 
+import cv2
 import h5py
 from loader.mnist import load_standard_MNIST
 from segmnistshapes import SegMNISTShapes
@@ -101,8 +102,8 @@ def generate_caffe_segmnist_shapes():
         if group_remainder == 0:
             mkdirs("%s/%s/%d" % (output_dir, mode, group))
 
-        scipy.misc.imsave(fn_img, top[0].data[stimulus_number].transpose([1,2,0]))
-        scipy.misc.imsave(fn_seg, top[3].data[stimulus_number, 0])
+        cv2.imwrite(fn_img, top[0].data[stimulus_number].transpose([1,2,0]))
+        cv2.imwrite(fn_seg, top[3].data[stimulus_number, 0])
 
 def generate_segmnist_shapes():
 
@@ -363,7 +364,7 @@ def generate_segmnist_shapes_x_images(dataset, prefix, output_dir, mode, num_exa
 
     for stimulus_number in range(num_examples):
         np.random.seed(stimulus_number + seed_offset)
-        grid = np.array(grid_arrangements.next(), dtype=np.bool).reshape(2, 2)
+        grid = np.array(grid_arrangements.__next__(), dtype=np.bool).reshape(2, 2)
         ncells = np.sum(grid)
         dataset.set_min_digits(ncells)
         dataset.set_max_digits(ncells)
@@ -404,8 +405,8 @@ def generate_segmnist_shapes_x_images(dataset, prefix, output_dir, mode, num_exa
         else:
             img = new_data.transpose(1, 2, 0)
 
-        scipy.misc.imsave(fn_img, img)
-        scipy.misc.imsave(fn_seg, new_seg_label)
+        cv2.imwrite(fn_img, img)
+        cv2.imwrite(fn_seg, new_seg_label)
         stimulus_number += 1
 
         with h5py.File(fn_hdf5_cls, 'w') as f:
