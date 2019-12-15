@@ -1,1 +1,1 @@
-from segmnist_pytorch import SegMNISTShapesPyTorch
+from pytorch.segmnist_pytorch import SegMNISTShapesPyTorch

@@ -282,8 +282,10 @@ class SegMNISTShapes(object):
                               1,  # single channel
                               self._imshape[1],  # 28 * self._gridH,
                               self._imshape[2]), dtype=np.uint8)
+        # print('PRINT ShapeGenerator: ', len(self._shapeGenerators), self._shapeGenerators)
         cls_label = np.zeros((batch_size,
-                              10 + len(self._shapeGenerators),
+                              # 10 + len(self._shapeGenerators), # Why is _shapeGenerators not 2???
+                              12 + len(self._shapeGenerators),
                               1, 1), dtype=np.uint8)
 
         for n in range(batch_size):

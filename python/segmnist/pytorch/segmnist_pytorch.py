@@ -1,10 +1,11 @@
 import torch
 
-from segmnist import SegMNIST
+# from segmnist import SegMNIST
 from segmnist import SegMNISTShapes
+from segmnist.loader.mnist import load_standard_MNIST
 from segmnist.segmnistshapes import SquareGenerator
 from segmnist.segmnistshapes import RectangleGenerator
-from segmnist.texture_generator import random_color_texture
+# from segmnist.texture_generator import random_color_texture
 
 
 class SegMNISTShapesPyTorch():
@@ -33,16 +34,21 @@ class SegMNISTShapesPyTorch():
         self.positioning = digit_positioning
         self.GPU = GPU
 
-        self.mnist = SegMNIST.load_standard_MNIST(
+        self.mnist = load_standard_MNIST(
             self.mnist_dataset_name,
             shuffle=True
         )
 
+        # self.mnist = SegMNIST.load_standard_MNIST(
+        #     self.mnist_dataset_name,
+        #     shuffle=True
+        # )
+
         shapes = []
-        if self.nclasses >= 11:
-            shapes.append(SquareGenerator(random_color_texture))
-        if self.nclasses >= 12:
-            shapes.append(RectangleGenerator(random_color_texture))
+        # if self.nclasses >= 11:
+        #     shapes.append(SquareGenerator(random_color_texture))
+        # if self.nclasses >= 12:
+        #     shapes.append(RectangleGenerator(random_color_texture))
 
         self.batch_loader = SegMNISTShapes(
             self.mnist,
@@ -82,6 +88,8 @@ class SegMNISTShapesPyTorch():
             torch.from_numpy(seg_label).type(torch.FloatTensor))
 
         # flatten cls_label
+        # print(img_data.shape, cls_label.shape, seg_label.shape, self.batch_size)
+        # torch.Size([1024, 3, 56, 56]) torch.Size([1024, 10, 1, 1]) torch.Size([1024, 1, 56, 56])
         cls_label = cls_label.view(-1, self.nclasses)
 
         # transfer to GPU
