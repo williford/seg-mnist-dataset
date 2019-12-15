@@ -31,6 +31,8 @@ class SegMNISTShapesLayerSync(CaffeLayer):
     """
 
     def setup(self, bottom, top):
+        """ Parse the parameter string from the Caffe prototxt.
+        """
 
         # === Read input parameters ===
 
@@ -51,6 +53,14 @@ class SegMNISTShapesLayerSync(CaffeLayer):
             self.bg_pix_mul = params['bg_pix_mul']
         else:
             self.bg_pix_mul = 1.0
+
+        # -------------------------------------------------------------------
+        # Read in parameters for the general stimulus set general_stimset
+        # The probability of a stimulus being from this stimulus set is
+        # (1 - p_fgmodatt_set).
+        # The general_stimset encapsulates a lot of random stimulus
+        # posibilities.
+        # -------------------------------------------------------------------
 
         self.nclasses = params['nclasses']
 
@@ -152,6 +162,12 @@ class SegMNISTShapesLayerSync(CaffeLayer):
             shapes=shapes,
             texturegen=texturegen,
         )
+        # -------------------------------------------------------------------
+        # Create the FGMod Attention Stimulus set. This is for the experiment
+        # that corresponds to the Poort et al 2012 experiment.
+        # The probability of a stimulus being drawn from this set is
+        # p_fgmodatt_set.
+        # -------------------------------------------------------------------
 
         if 'p_fgmodatt_set' in params.keys() and params['p_fgmodatt_set'] > 0:
             texture_color_overlap = (0, 0)
@@ -182,11 +198,13 @@ class SegMNISTShapesLayerSync(CaffeLayer):
         if 'min_digits' in params.keys():
             self.batch_loader.set_min_digits(params['min_digits'])
 
+        # Random scaling that is applied
         if 'scale_range' in params.keys():
             self.batch_loader.set_scale_range(params['scale_range'])
         else:
             self.batch_loader.set_scale_range((0.5, 1.5))
 
+        # The probability for each digit and shape class. 
         if 'classfreq' in params.keys():
             self.batch_loader.set_class_freq(params['classfreq'])
 
