@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-
 import os
-import loader
 import scipy.misc
 import numpy as np
 import errno
@@ -12,6 +9,7 @@ import h5py
 import math
 import random
 
+from . import loader
 
 def random_color_texture(shape, mean, var):
     assert shape[0] == len(mean)

@@ -1,4 +1,4 @@
-__all__ = ['mnist', 'caffe']
+__all__ = ['mnist', 'caffe', 'SegMNIST', 'SegMNISTShapes']
 
-from segmnist import SegMNIST
-from segmnistshapes import SegMNISTShapes
+from segmnist.segmnist import SegMNIST
+from segmnist.segmnistshapes import SegMNISTShapes
