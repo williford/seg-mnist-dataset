@@ -102,7 +102,7 @@ class SegMNISTShapesPyTorch():
 
             for n in range(self.batch_size):
                 # Create attend_label by randomly choosing one cls_label
-                labels = np.flatnonzero(cls_label[n])
+                labels = list(np.flatnonzero(cls_label[n]))
                 lbl = random.sample(labels, 1)[0]
                 attend_label[n, lbl] = 1
 

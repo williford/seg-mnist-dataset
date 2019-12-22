@@ -7,6 +7,7 @@ import itertools
 
 import h5py
 import math
+from PIL import Image
 import random
 
 from . import loader
@@ -79,7 +80,8 @@ def generate_textured_image(mnist_iter, grid, mnist_shape=(28, 28),
         label1, data0 = mnist_iter.next()
         labels.add(label1)
 
-        data1 = scipy.misc.imresize(data0, (h, w), 'bicubic')
+        # data1 = scipy.misc.imresize(data0, (h, w), 'bicubic')
+        data1 = np.array(Image.fromarray(data0).resize((h, w)))
 
         # Calculate indices within digit
         digit_offset_i = abs(min(0, offset_i))
