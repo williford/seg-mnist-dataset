@@ -1,15 +1,12 @@
 import random
-# <<<<<<< HEAD
 from textures import WhiteNoiseTexture
 from segmnist import mnist_generator
 import positioning as pos
-# =======
 # import itertools
 # from . import loader
 # from .texture_generator import random_color_texture
 # from . import mnist_generator
 # import os
-# >>>>>>> Change relative imports to be explicit.
 import numpy as np
 import math
 from abc import ABCMeta

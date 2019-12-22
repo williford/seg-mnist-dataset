@@ -1,10 +1,7 @@
 import random
 import numpy as np
 import scipy
-<<<<<<< HEAD
 import positioning as pos
-=======
->>>>>>> run Spiking Attention code
 from PIL import Image
 
 
@@ -28,18 +25,11 @@ def generate_digit(new_data,
     slice_dest_i = slice(max(0, offset_i), min(H, offset_i + h))
     slice_dest_j = slice(max(0, offset_j), min(W, offset_j + w))
 
-# <<<<<<< HEAD
     label1, data0 = mnist_iter.__next__()
-# =======
 #     label1, data0 = next(mnist_iter)
-# >>>>>>> Make change for python3.
 
-<<<<<<< HEAD
-    data1 = np.array(Image.fromarray(data0).resize((h, w))) # scipy.misc.imresize(data0, (h, w), 'bicubic')
-=======
     # data1 = scipy.misc.imresize(data0, (h, w), 'bicubic')
     data1 = np.array(Image.fromarray(data0).resize((h, w)))
->>>>>>> run Spiking Attention code
 
     # Calculate indices within digit
     digit_offset_i = abs(min(0, offset_i))
