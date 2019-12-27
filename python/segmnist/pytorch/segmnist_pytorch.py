@@ -73,7 +73,7 @@ class SegMNISTShapesPyTorch():
                    batch_size,
                    im_shape)
 
-    def get_batch(self, segmentation=True, cuda_device=0):
+    def get_batch(self, segmentation=True, attend=False, cuda_device=0):
         """
         Creates a batch. Returns torch tensors:
         data            segMNIST image, shape (bs, depth, height, width)
@@ -109,16 +109,13 @@ class SegMNISTShapesPyTorch():
                 # retain masked out regions
                 seg_label[n][seg_label_raw[n] == 255] = 255
 
-# <<<<<<< HEAD
-        # # flatten cls_label
-        # # print(img_data.shape, cls_label.shape, seg_label.shape, self.batch_size)
-        # # torch.Size([1024, 3, 56, 56]) torch.Size([1024, 10, 1, 1]) torch.Size([1024, 1, 56, 56])
-        # cls_label = cls_label.view(-1, self.nclasses)
-# =======
                 # set current label to foreground
                 seg_label[n][seg_label_raw[n] == (lbl + 1)] = 1
 
-            return_list = [img_data, cls_label, attend_label, seg_label]
+            if attend:
+                return_list = [img_data, cls_label, attend_label, seg_label]
+            else:
+                return_list = [img_data, cls_label, seg_label]
 
         else:
             return_list = [img_data, cls_label]
