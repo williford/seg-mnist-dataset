@@ -52,17 +52,17 @@ def generate_caffe_segmnist_shapes():
     batch_size = 50
     caflayer.param_str = (
         "{ \'mnist_dataset\': \'mnist-training\', \'digit_positioning\':"
-        " \'random\', \'scale_range\': (0.9, 1.1), \'im_shape\': (3, 56, 56),"
-        " \'bg_pix_mul\': 1.0, \'batch_size\': %d, \'min_digits\': 2,"
-        " \'max_digits\': 3, \'nclasses\': 12, \'p_fgmodatt_set\': 0.5,"
+        " \'random\', \'scale_range\': (0.75, 1.5), \'im_shape\': (3, 56, 56),"
+        " \'bg_pix_mul\': 5.0, \'batch_size\': %d, \'min_digits\': 2,"
+        " \'max_digits\': 3, \'nclasses\': 12, \'p_fgmodatt_set\': 0.1,"
         " \'fgmodatt_color_overlap\': (0.5, 1), "
-        " \'pwhitenoise\': 0.3, \'pgratings\': 0, \'pfgmod\': 0.8,"
-        " \'fgmod_indepcols\': 0, \'fgmod_texalpha\': (1.0),"
-        " \'fgmod_min_area\': 10, \'pintermix\': 0,"
-        " \'classfreq\': (1,1,1,1,1, 1,1,1,1,1, 3.0,3.0)"
+        " \'pwhitenoise\': 0.1, \'pgratings\': 0, \'pfgmod\': 0.9,"
+        " \'fgmod_indepcols\': 0.5, \'fgmod_texalpha\': (0.5,1.0),"
+        " \'fgmod_min_area\': 0, \'pintermix\': 0.05,"
+        " \'classfreq\': (1,1,1,1,1, 1,1,1,1,1, 5.0,5.0)"
         "}"
     ) % (batch_size)
-
+    
     nclasses = 12
     im_shape = (3, 56, 56)
     bottom = []
