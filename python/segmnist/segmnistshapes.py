@@ -1,7 +1,7 @@
 import random
 import itertools
 from . import loader
-from texture_generator import random_color_texture
+from .texture_generator import random_color_texture
 from . import mnist_generator
 import os
 import numpy as np

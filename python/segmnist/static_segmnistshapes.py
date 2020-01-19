@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import os
-import loader
 import scipy.misc
 import numpy as np
 import errno
@@ -13,6 +12,7 @@ import pdb
 import h5py
 from segmnist import SegMNIST
 from segmnistshapes import SegMNISTShapes
+from . import loader
 
 
 def mkdirs(path):
