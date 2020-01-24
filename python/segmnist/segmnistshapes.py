@@ -348,29 +348,19 @@ class SegMNISTShapes(object):
                     seg_label[n] < 255))
 
                 # make npix_bg == npix_fg / nobj, when bg_pix_mul == 1
-                if npix_bg == 0 or npix_bg == 0.:
+                if npix_bg == 0 or npix_bg == 0.: # patch
                     npix_bg = 1.
                 prob_bg = min(
                         1.0, self._bg_pix_mul * (float(npix_fg) / nobj) / npix_bg)
 
                 uniform = np.random.uniform(size=self._imshape[1:])
                 # make sure there is atleast 1 bg pixel
-                try:
-                    if np.sum(uniform[seg_label[n, 0] == 0]) == 0.:
-                        prob_pixel_bg = prob_bg
-                    else: 
-                        prob_pixel_bg = max(
-                        np.min(uniform[seg_label[n, 0] == 0]),
-                        prob_bg)
-                except:
-                    print('prob_bg: ', prob_bg)
-                    print('uniform[seg_label[n, 0] == 0]', np.sum(uniform[seg_label[n, 0] == 0]))
-                    print('seg_label.shape: ', seg_label.shape)
-                    print('seg_label[n, 0] == 0: ', seg_label[n, 0] == 0, seg_label[n, 0].shape)
-                    print('')
-                    print('uniform[seg_label[n, 0] == 0]: ', uniform[seg_label[n, 0] == 0])
-                    print(max(np.min(uniform[seg_label[n, 0] == 0]),prob_bg))
-                    sys.exit()
+                if np.sum(uniform[seg_label[n, 0] == 0]) == 0.: # patch
+                    prob_pixel_bg = prob_bg
+                else: 
+                    prob_pixel_bg = max(
+                    np.min(uniform[seg_label[n, 0] == 0]),
+                    prob_bg)
 
                 seg_label[n, 0][np.logical_and(
                     seg_label[n, 0] == 0,
