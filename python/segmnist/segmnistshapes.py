@@ -9,6 +9,7 @@ import numpy as np
 import math
 from abc import ABCMeta
 
+import sys
 
 class RectangleShape(object):
     def __init__(self, center, length1, length2, orientation, texturegen):
@@ -291,10 +292,10 @@ class SegMNISTShapes(object):
         # print('PRINT ShapeGenerator: ', len(self._shapeGenerators), self._shapeGenerators)
         cls_label = np.zeros((batch_size,
                               10 + len(self._shapeGenerators), # Why is _shapeGenerators not 2???
-                              # 12 + len(self._shapeGenerators),
+                              # 12 + len(self._shapeGenerators), #Stijn edit
                               1, 1), dtype=np.uint8)
 
-        for n in range(batch_size):
+        for n in range(batch_size): # Loops trhough all batches
             nobj = random.randint(self._min_num_objects,
                                   self._max_num_objects)
 
@@ -310,7 +311,7 @@ class SegMNISTShapes(object):
 
             labels = set()
             # Add objects
-            for iobj in range(nobj):
+            for iobj in range(nobj): # Loops through all objects
                 # clsi = random.randint(0, 9 + len(self._shapeGenerators))
                 clsi = np.random.choice(10 + len(self._shapeGenerators),
                                         p=self._classprob)
@@ -347,14 +348,29 @@ class SegMNISTShapes(object):
                     seg_label[n] < 255))
 
                 # make npix_bg == npix_fg / nobj, when bg_pix_mul == 1
+                if npix_bg == 0 or npix_bg == 0.:
+                    npix_bg = 1.
                 prob_bg = min(
-                    1.0, self._bg_pix_mul * (float(npix_fg) / nobj) / npix_bg)
+                        1.0, self._bg_pix_mul * (float(npix_fg) / nobj) / npix_bg)
 
                 uniform = np.random.uniform(size=self._imshape[1:])
                 # make sure there is atleast 1 bg pixel
-                prob_pixel_bg = max(
-                    np.min(uniform[seg_label[n, 0] == 0]),
-                    prob_bg)
+                try:
+                    if np.sum(uniform[seg_label[n, 0] == 0]) == 0.:
+                        prob_pixel_bg = prob_bg
+                    else: 
+                        prob_pixel_bg = max(
+                        np.min(uniform[seg_label[n, 0] == 0]),
+                        prob_bg)
+                except:
+                    print('prob_bg: ', prob_bg)
+                    print('uniform[seg_label[n, 0] == 0]', np.sum(uniform[seg_label[n, 0] == 0]))
+                    print('seg_label.shape: ', seg_label.shape)
+                    print('seg_label[n, 0] == 0: ', seg_label[n, 0] == 0, seg_label[n, 0].shape)
+                    print('')
+                    print('uniform[seg_label[n, 0] == 0]: ', uniform[seg_label[n, 0] == 0])
+                    print(max(np.min(uniform[seg_label[n, 0] == 0]),prob_bg))
+                    sys.exit()
 
                 seg_label[n, 0][np.logical_and(
                     seg_label[n, 0] == 0,
