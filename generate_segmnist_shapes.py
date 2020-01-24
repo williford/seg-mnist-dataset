@@ -13,8 +13,8 @@ sys.path.append('/media/Data/Documents/Enkium/Projects/NIN/seg-mnist-dataset/pyt
 # sys.path.append('/media/Data/Documents/Enkium/Projects/NIN/seg-mnist-dataset/python/segmnist/loader')
 
 
-from segmnist.static_segmnistshapes import generate_caffe_segmnist_shapes # original
-# from python.segmnist.static_segmnistshapes import generate_caffe_segmnist_shapes
+# from segmnist.static_segmnistshapes import generate_caffe_segmnist_shapes # original
+from python.segmnist.static_segmnistshapes import generate_caffe_segmnist_shapes
 
 
 if __name__ == "__main__":

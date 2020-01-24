@@ -7,7 +7,7 @@ from segmnist import SegMNISTShapes
 from segmnist.loader.mnist import load_standard_MNIST
 from segmnist.segmnistshapes import SquareGenerator
 from segmnist.segmnistshapes import RectangleGenerator
-# from segmnist.texture_generator import random_color_texture
+from segmnist.texture_generator import random_color_texture
 
 
 class SegMNISTShapesPyTorch():
@@ -41,16 +41,13 @@ class SegMNISTShapesPyTorch():
             shuffle=True
         )
 
-        # self.mnist = SegMNIST.load_standard_MNIST(
-        #     self.mnist_dataset_name,
-        #     shuffle=True
-        # )
-
         shapes = []
-        # if self.nclasses >= 11:
-        #     shapes.append(SquareGenerator(random_color_texture))
-        # if self.nclasses >= 12:
-        #     shapes.append(RectangleGenerator(random_color_texture))
+        if self.nclasses >= 11:
+            shapes.append(SquareGenerator())
+            # shapes.append(SquareGenerator(random_color_texture))
+        if self.nclasses >= 12:
+            shapes.append(RectangleGenerator())
+            # shapes.append(RectangleGenerator(random_color_texture))
 
         self.batch_loader = SegMNISTShapes(
             self.mnist,
@@ -123,7 +120,6 @@ class SegMNISTShapesPyTorch():
         # convert to tensor
         for i, arr in enumerate(return_list):
             return_list[i] = torch.from_numpy(arr).type(torch.FloatTensor)
-# >>>>>>> Correct segmentation target generation
 
         # transfer to GPU
         if self.GPU:

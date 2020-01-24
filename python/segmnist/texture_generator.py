@@ -10,7 +10,7 @@ import math
 from PIL import Image
 import random
 
-from . import loader
+# from . import loader
 
 def random_color_texture(shape, mean, var):
     assert shape[0] == len(mean)
