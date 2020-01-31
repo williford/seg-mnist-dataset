@@ -1,5 +1,5 @@
-from generator import TextureGenerator
 import numpy as np
+from segmnist.textures.generator import TextureGenerator
 
 
 class TextureDispatcher(TextureGenerator):

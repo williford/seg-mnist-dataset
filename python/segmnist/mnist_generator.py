@@ -1,7 +1,7 @@
 import random
 import numpy as np
 import scipy
-import positioning as pos
+import segmnist.positioning as pos
 from PIL import Image
 
 
