@@ -1,10 +1,11 @@
-from segmnist.segmnistshapes import SegMNISTShapes
-# from fgmodattendexperiment import FGModAttendExperiment
 from segmnist import loader
+from segmnist.segmnistshapes import SegMNISTShapes
+from segmnist.fgmodattendexperiment import FGModAttendExperiment
 from segmnist.stimsetdispatcher import StimSetDispatcher
+from segmnist.dataset_generator import create_dataset_generator
 
-__all__ = ['SegMNISTShapes', 'FGModAttendExperiment', 'loader',
-           'StimSetDispatcher']
+__all__ = ['loader', 'SegMNISTShapes', 'FGModAttendExperiment',
+           'StimSetDispatcher', 'create_dataset_generator']
 
 # __all__ = ['mnist', 'caffe', 'SegMNIST', 'SegMNISTShapes']
 

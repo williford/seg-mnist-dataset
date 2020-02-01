@@ -1,26 +1,26 @@
 #!/usr/bin/env python
 
 import os
-import loader
 import scipy.misc
 import numpy as np
 import errno
 import pandas as pd
 import itertools
+import ast
 
 import pdb
 
-import cv2
+import imageio
 import h5py
-from loader.mnist import load_standard_MNIST
-from segmnistshapes import SegMNISTShapes
-from fgmodattendexperiment import FGModAttendExperiment
-from textures import TextureDispatcher
-from textures import IntermixTexture
-from textures import WhiteNoiseTexture
-# from textures import SinusoidalGratings
-from textures import FGModTexture
-from caffe import SegMNISTShapesLayerSync
+from segmnist.loader import load_standard_MNIST
+from segmnist.segmnistshapes import SegMNISTShapes
+from segmnist.fgmodattendexperiment import FGModAttendExperiment
+from segmnist.textures import TextureDispatcher
+from segmnist.textures import IntermixTexture
+from segmnist.textures import WhiteNoiseTexture
+from segmnist.textures import FGModTexture
+from segmnist import create_dataset_generator
+# from segmnist.textures import SinusoidalGratings
 
 
 def mkdirs(path):
@@ -48,6 +48,7 @@ def generate_caffe_segmnist_shapes():
     """
      To-do: p_fgmodatt_set "takes over" if non-zero.
     """
+    from caffe import SegMNISTShapesLayerSync
     caflayer = SegMNISTShapesLayerSync()
     batch_size = 50
     caflayer.param_str = (
@@ -62,7 +63,7 @@ def generate_caffe_segmnist_shapes():
         " \'classfreq\': (1,1,1,1,1, 1,1,1,1,1, 5.0,5.0)"
         "}"
     ) % (batch_size)
-    
+
     nclasses = 12
     im_shape = (3, 56, 56)
     bottom = []
@@ -102,32 +103,84 @@ def generate_caffe_segmnist_shapes():
         if group_remainder == 0:
             mkdirs("%s/%s/%d" % (output_dir, mode, group))
 
-        cv2.imwrite(fn_img, top[0].data[stimulus_number].transpose([1,2,0]))
-        cv2.imwrite(fn_seg, top[3].data[stimulus_number, 0])
+        imageio.imwrite(fn_img, top[0].data[stimulus_number].transpose([1,2,0]))
+        imageio.imwrite(fn_seg, top[3].data[stimulus_number, 0])
+
 
 def generate_segmnist_shapes():
+    # Make it easy to copy and paste old Caffe-format parameter strings
+    param_str = """
+        { \'mnist_dataset\': \'mnist-training\', \'digit_positioning\':
+        \'random\', \'scale_range\': (0.8, 1.2), \'im_shape\': (3, 56, 56),
+        \'bg_pix_mul\': 3, \'batch_size\': 128, \'min_digits\': 2, \'max_digits\': 3,
+        \'nclasses\': 12, \'p_fgmodatt_set\': 0.75, \'fgmodatt_color_overlap\': (1,1),
+        \'pwhitenoise\': 0, \'pgratings\': 0, \'pfgmod\': 0.25, \'fgmod_indepcols\':
+        0.2, \'fgmod_texalpha\': (0.75,1.0), \'fgmod_min_area\': 0, \'pintermix\':
+        0.05, \'classfreq\': (1,1,1,1,1, 1,1,1,1,1, 5.0,5.0) }
+    """ 
+    param_str = ' '.join(param_str.split())
+    params = ast.literal_eval(param_str)
+    dataset_generator = create_dataset_generator(**params)
 
     output_dir = 'data'
-    mkdirs("%s" % (output_dir))
+    mkdirs(output_dir)
 
-    generate_fgmodatt_stimset(
-        mask_bg=False, output_dir=output_dir)
+    mode = params['mnist_dataset'].split('-')[-1]
+    prefix = 'fgmodatt-stimset'
 
-    flist = generate_segmnist_shapes_bgmask(
-        mask_bg=False, output_dir=output_dir)
-    flist_bgmask = generate_segmnist_shapes_bgmask(
-        mask_bg=0.85, output_dir=output_dir)
 
-    # for (f1, f2) in zip(flist, flist_bgmask):
-    #     task = f1[0]
-    #     mode = f1[1]
-    #     with open("%s/%s-segmnist-shapes-any.%s.txt" %
-    #               (output_dir, task, mode), 'w') as f:
-    #         for line in f1[2]:
-    #             f.write(line + '\n')
-    #         if task != 'classification' or flist_bgmask is None:
-    #             for line in f2[2]:
-    #                 f.write(line + '\n')
+    # for stimulus_number in params['batch_size']:
+    for stimulus_number in range(10):
+        (img_data, cls_label, seg_label) = dataset_generator.create_batch(1)
+        # split up into groups, so that there is not too many files per
+        # folder
+        (group, group_remainder) = divmod(
+            stimulus_number, 1000)
+        fn_img = "%s/%s/%d/%s_%s_%07d-image.png" % (
+            output_dir,
+            mode,
+            group,
+            prefix,
+            mode,
+            stimulus_number)
+        fn_seg = "%s/%s/%d/%s_%s_%07d-segm.png" % (
+            output_dir,
+            mode,
+            group,
+            prefix,
+            mode,
+            stimulus_number)
+
+        if group_remainder == 0:
+            mkdirs("%s/%s/%d" % (output_dir, mode, group))
+
+        imageio.imwrite(fn_img, img_data[0].transpose([1,2,0]))
+        imageio.imwrite(fn_seg, seg_label[0,0])
+
+
+# def generate_segmnist_shapes():
+# 
+#     output_dir = 'data'
+#     mkdirs("%s" % (output_dir))
+# 
+#     generate_fgmodatt_stimset(
+#         mask_bg=False, output_dir=output_dir)
+# 
+#     flist = generate_segmnist_shapes_bgmask(
+#         mask_bg=False, output_dir=output_dir)
+#     flist_bgmask = generate_segmnist_shapes_bgmask(
+#         mask_bg=0.85, output_dir=output_dir)
+# 
+#     # for (f1, f2) in zip(flist, flist_bgmask):
+#     #     task = f1[0]
+#     #     mode = f1[1]
+#     #     with open("%s/%s-segmnist-shapes-any.%s.txt" %
+#     #               (output_dir, task, mode), 'w') as f:
+#     #         for line in f1[2]:
+#     #             f.write(line + '\n')
+#     #         if task != 'classification' or flist_bgmask is None:
+#     #             for line in f2[2]:
+#     #                 f.write(line + '\n')
 
 
 def generate_segmnist_shapes_bgmask(mask_bg, output_dir):
@@ -405,8 +458,8 @@ def generate_segmnist_shapes_x_images(dataset, prefix, output_dir, mode, num_exa
         else:
             img = new_data.transpose(1, 2, 0)
 
-        cv2.imwrite(fn_img, img)
-        cv2.imwrite(fn_seg, new_seg_label)
+        imageio.imwrite(fn_img, img)
+        imageio.imwrite(fn_seg, new_seg_label)
         stimulus_number += 1
 
         with h5py.File(fn_hdf5_cls, 'w') as f:
