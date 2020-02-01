@@ -1,4 +1,4 @@
-from loader import MNIST
+from segmnist.loader import MNIST
 import random
 
 

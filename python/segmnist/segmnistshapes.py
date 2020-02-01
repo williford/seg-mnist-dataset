@@ -1,9 +1,9 @@
 import random
-from textures import WhiteNoiseTexture
+from segmnist.textures import WhiteNoiseTexture
 from segmnist import mnist_generator
-import positioning as pos
+import segmnist.positioning as pos
 # from . import loader
-from texture_generator import random_color_texture
+from segmnist.texture_generator import random_color_texture
 # from . import mnist_generator
 import numpy as np
 import math

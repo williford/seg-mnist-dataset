@@ -1,6 +1,7 @@
-from generator import TextureGenerator
 import numpy as np
 import math
+
+from segmnist.textures.generator import TextureGenerator
 
 class SinusoidalGratings(TextureGenerator):
     """ Texture with sinusoidal gratings.

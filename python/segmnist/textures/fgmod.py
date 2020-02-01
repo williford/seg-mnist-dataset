@@ -1,4 +1,4 @@
-from generator import TextureGenerator
+from segmnist.textures.generator import TextureGenerator
 import numpy as np
 
 

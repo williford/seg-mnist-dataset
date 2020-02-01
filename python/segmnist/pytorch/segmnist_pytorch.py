@@ -4,7 +4,7 @@ import numpy as np
 
 # from segmnist import SegMNIST
 from segmnist import SegMNISTShapes
-from segmnist.loader.mnist import load_standard_MNIST
+from segmnist.loader import load_standard_MNIST
 from segmnist.segmnistshapes import SquareGenerator
 from segmnist.segmnistshapes import RectangleGenerator
 from segmnist.texture_generator import random_color_texture
