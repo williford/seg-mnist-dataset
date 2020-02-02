@@ -109,14 +109,23 @@ def generate_caffe_segmnist_shapes():
 
 def generate_segmnist_shapes():
     # Make it easy to copy and paste old Caffe-format parameter strings
+    ffwd_param_str = """
+		{ 'mnist_dataset': 'mnist-training', 'digit_positioning': 'random',
+		'scale_range': (0.75, 1.5), 'im_shape': (3, 56, 56), 'bg_pix_mul': 3,
+		'batch_size': 256, 'min_digits': 2, 'max_digits': 3, 'nclasses': 12,
+		'p_fgmodatt_set': 0.1, 'pwhitenoise': 0.1, 'pgratings': 0, 'pfgmod':
+		0.9, 'fgmod_indepcols': 0.5, 'fgmod_texalpha': (0.5,1), 'fgmod_min_area':
+		0, 'pintermix': 0.05, 'classfreq': (1,1,1,1,1, 1,1,1,1,1, 5.0,5.0) }
+    """
+
     param_str = """
-        { \'mnist_dataset\': \'mnist-training\', \'digit_positioning\':
-        \'random\', \'scale_range\': (0.8, 1.2), \'im_shape\': (3, 56, 56),
-        \'bg_pix_mul\': 3, \'batch_size\': 128, \'min_digits\': 2, \'max_digits\': 3,
-        \'nclasses\': 12, \'p_fgmodatt_set\': 0.75, \'fgmodatt_color_overlap\': (1,1),
-        \'pwhitenoise\': 0, \'pgratings\': 0, \'pfgmod\': 0.25, \'fgmod_indepcols\':
-        0.2, \'fgmod_texalpha\': (0.75,1.0), \'fgmod_min_area\': 0, \'pintermix\':
-        0.05, \'classfreq\': (1,1,1,1,1, 1,1,1,1,1, 5.0,5.0) }
+        { 'mnist_dataset': 'mnist-training', 'digit_positioning':
+        'random', 'scale_range': (0.8, 1.2), 'im_shape': (3, 56, 56),
+        'bg_pix_mul': 3, 'batch_size': 128, 'min_digits': 2, 'max_digits': 3,
+        'nclasses': 12, 'p_fgmodatt_set': 0.75, 'fgmodatt_color_overlap': (1,1),
+        'pwhitenoise': 0, 'pgratings': 0, 'pfgmod': 0.25, 'fgmod_indepcols':
+        0.2, 'fgmod_texalpha': (0.75,1.0), 'fgmod_min_area': 0, 'pintermix':
+        0.05, 'classfreq': (1,1,1,1,1, 1,1,1,1,1, 5.0,5.0) }
     """ 
     param_str = ' '.join(param_str.split())
     params = ast.literal_eval(param_str)

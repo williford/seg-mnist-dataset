@@ -8,11 +8,14 @@ from segmnist.loader import load_standard_MNIST
 from segmnist.segmnistshapes import SquareGenerator
 from segmnist.segmnistshapes import RectangleGenerator
 from segmnist.texture_generator import random_color_texture
+from segmnist import create_dataset_generator
 
 
 class SegMNISTShapesPyTorch():
     """
-    SegMNIST Shapes <https://github.com/williford/seg-mnist-dataset> Dataset.
+    PyTorch wrapper for create_dataset_generator.
+
+    See dataset_generator.py for arguments.
 
     Args:
         batch_size (int): Batch size
@@ -25,50 +28,20 @@ class SegMNISTShapesPyTorch():
         digit_positioning (string): TODO
     """
 
-    def __init__(self, batch_size, nclasses, im_shape, mnist_dataset,
-                 bg_pix_mul=1.0, digit_positioning='random', max_digits=None,
-                 min_digits=None, scale_range=(0.5, 1.5), GPU=False):
-        self.batch_size = batch_size
-        self.nclasses = nclasses
-        self.imshape = im_shape
-        self.mnist_dataset_name = mnist_dataset
-        self.bg_pix_mul = bg_pix_mul
-        self.positioning = digit_positioning
-        self.GPU = GPU
+    def __init__(self, **params):
+                 # batch_size, nclasses, im_shape, mnist_dataset,
+                 # bg_pix_mul=1.0, digit_positioning='random', max_digits=None,
+                 # min_digits=None, scale_range=(0.5, 1.5), GPU=False):
 
-        self.mnist = load_standard_MNIST(
-            self.mnist_dataset_name,
-            shuffle=True
-        )
+        self.batch_loader = create_dataset_generator(**params)
 
-        shapes = []
-        if self.nclasses >= 11:
-            shapes.append(SquareGenerator())
-            # shapes.append(SquareGenerator(random_color_texture))
-        if self.nclasses >= 12:
-            shapes.append(RectangleGenerator())
-            # shapes.append(RectangleGenerator(random_color_texture))
+        self.batch_size = params['batch_size']
+        self.GPU = params['GPU']
 
-        self.batch_loader = SegMNISTShapes(
-            self.mnist,
-            imshape=self.imshape,
-            bg_pix_mul=self.bg_pix_mul,
-            positioning=self.positioning,
-            shapes=shapes
-        )
-
-        if max_digits:
-            self.batch_loader.set_max_digits(max_digits)
-
-        if min_digits:
-            self.batch_loader.set_min_digits(min_digits)
-
-        self.batch_loader.set_scale_range(scale_range)
-
-        print_info("SegMNISTShapesLayerSync",
-                   mnist_dataset,
-                   batch_size,
-                   im_shape)
+        print_info("SegMNISTShapesPyTorch",
+                   params['mnist_dataset'],
+                   params['batch_size'],
+                   params['im_shape'])
 
     def get_batch(self, segmentation=True, attend=False, cuda_device=0):
         """
