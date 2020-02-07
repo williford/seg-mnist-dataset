@@ -38,11 +38,13 @@ class RectangleShape(object):
         dist_y = yv - (self._center[0] + 0.5)
 
         # Rotation (around pos_yx)
-        x_theta = (dist_x * np.cos(self._orientation()) - # Needs to be called because it is a function
-                   dist_y * np.sin(self._orientation()))
+        # Orientation should be fixed for a given RectangleShape, not a
+        # function
+        x_theta = (dist_x * np.cos(self._orientation) -
+                   dist_y * np.sin(self._orientation))
 
-        y_theta = (dist_x * np.sin(self._orientation()) +
-                   dist_y * np.cos(self._orientation()))
+        y_theta = (dist_x * np.sin(self._orientation) +
+                   dist_y * np.cos(self._orientation))
 
         mask = np.minimum(
             self._length1 / 2.0 + 0.5 - abs(x_theta),
@@ -131,7 +133,7 @@ class RectangleGenerator(ShapeGenerator):
         (center_x, center_y) = positioning.generate(
             self._frame, (length1, length2), center=True,
             max_ratio_outside=self._max_ratio_outside)
-        orientation = self._orientation_gen
+        orientation = self._orientation_gen()
 
         return RectangleShape((center_y, center_x), length1, length2, orientation,
                            texturegen)
@@ -162,7 +164,7 @@ class SquareGenerator(ShapeGenerator):
         # center_y0 = self._frame.y0 + diameter - self._max_ratio_outside * diameter
         # center_y1 = self._frame.y1 - diameter + self._max_ratio_outside * diameter
         # center_y = random.uniform(center_y0, center_y1)
-        orientation = self._orientation_gen
+        orientation = self._orientation_gen()
 
         return SquareShape((center_y, center_x), diameter, orientation,
                            texturegen)
