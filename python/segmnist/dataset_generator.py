@@ -15,10 +15,11 @@ from segmnist.textures import SinusoidalGratings
 from segmnist.textures import FGModTexture
 from segmnist.textures import IntermixTexture
 
-def create_dataset_generator(**params):
+def create_dataset_generator(seed=None, **params):
     """ Overall SegMNIST generator.
 
     Args:
+        seed - random seed to allow reproducibility (set to None for training)
         params should be a dict of the following:
         mnist_dataset - ex: mnist-training, determines data partition of MNIST
         digit_positioning - use 'random', other values may be deprecated?
@@ -46,6 +47,8 @@ def create_dataset_generator(**params):
             square or rectangle (a square appearing is 5 times more likely
             than any given digit).
     """
+    np.random.seed(seed)
+    random.seed(seed)
 
     # Check the parameters for validity.
     check_params(params)
@@ -83,7 +86,9 @@ def create_dataset_generator(**params):
     # Create a batch loader to load the images.
     mnist = load_standard_MNIST(
         params['mnist_dataset'],
-        shuffle=True)
+        shuffle=True,
+        seed=seed,
+    )
 
     shapes = []
     if params['nclasses'] >= 11:

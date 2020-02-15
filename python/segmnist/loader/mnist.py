@@ -14,7 +14,7 @@ class MNIST(object):
         self.img = None
         assert dataset_slice is None or len(dataset_slice) == 2
         self.slice = dataset_slice
-        self.seed_start = seed
+        self.seed_start = seed  # just used by ShuffledMNIST
         self.seed_current = seed
 
     def __len__(self):

@@ -18,10 +18,13 @@ class ShuffledMNIST(MNIST):
 
         while max_iter > 0:
             # set seed before each random range call
+            prev_state = random.getstate()
             random.seed(self.seed_current)
-            self.seed_current += 1
+            if self.seed_current is not None:
+                self.seed_current += 1
 
             i = random.randrange(len(self.lbl))
+            random.setstate(prev_state)
             yield (self.lbl[i], self.img[i])
             max_iter -= 1
 
