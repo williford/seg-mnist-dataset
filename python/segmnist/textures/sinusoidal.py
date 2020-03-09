@@ -20,15 +20,18 @@ class SinusoidalGratings(TextureGenerator):
         """ Called once for every example """
         self._ntextures = ntextures
         self._curr_texture_num = 0
-        # pick a random orientation first then add offset
-        # orientations between 0 and pi
-        self._orientations = (
-                np.random.choice([math.pi/4, 3*math.pi/4], size=2,
-                                 replace=False))
-        # np.random.uniform(-math.pi/4,math.pi/4))
-        self._wavelength = np.mean(np.random.uniform(2, 6, 2))  # mean = 4
+        # pick a random orientation first then add random offset for each
+        # foreground between 1/4 pi and 3/4 pi 
+        self._orientations = [
+            # background
+            np.random.uniform(-math.pi/4, math.pi/4),
+        ]
+        # self._orientations = (
+        #         np.random.choice([math.pi/4, 3*math.pi/4], size=2,
+        #                          replace=False))
+        # self._wavelength = np.mean(np.random.uniform(2, 6, 2))  # mean = 4
         # self._wavelength = 4
-        self._wavelength = 4 * math.sqrt(2)
+        # self._wavelength = 4 * math.sqrt(2)
 
     def generate(self, _=None):
         """ Called for every texture.
@@ -38,7 +41,15 @@ class SinusoidalGratings(TextureGenerator):
         """
         assert self._orientations is not None, (
                 'generate() must only be called after new_example()!')
-        orientation = self._orientations[min(self._curr_texture_num, 1)]
+        is_foreground = self._curr_texture_num > 0
+        self._wavelength = np.random.uniform(2, 6) * math.sqrt(2)
+        if self._curr_texture_num >= len(self._orientations):
+            self._orientations.append(
+                self._orientations[0] + np.random.uniform(
+                    math.pi/2 - math.pi/4,
+                    math.pi/2 + math.pi/4,
+                ))
+        orientation = self._orientations[self._curr_texture_num]
         phase = np.random.uniform(0, math.pi)
         self._curr_texture_num += 1
 
