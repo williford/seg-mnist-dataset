@@ -5,7 +5,7 @@ from segmnist.loader.shuffled_mnist import ShuffledMNIST
 __all__ = ['MNIST', 'ShuffledMNIST']
 
 
-def load_standard_MNIST(name, shuffle, path=None):
+def load_standard_MNIST(name, shuffle, seed=None, path=None):
     if path is None:
         if "MNIST_PATH" in os.environ:
             path = os.environ["MNIST_PATH"]
@@ -19,11 +19,11 @@ def load_standard_MNIST(name, shuffle, path=None):
         D = MNIST
 
     if name == 'training' or name == 'mnist-training':
-        mnist = D(path, dataset_slice=(0, 5000))
+        mnist = D(path, dataset_slice=(0, 5000), seed=seed)
         mnist.load_standard('training')
         return mnist
     elif name == 'validation' or name == 'mnist-validation':
-        mnist = D(path, dataset_slice=(5000, 6000))
+        mnist = D(path, dataset_slice=(5000, 6000), seed=seed)
         mnist.load_standard('training')
         return mnist
     else:

@@ -8,7 +8,7 @@ from segmnist import SegMNISTShapes
 from segmnist import FGModAttendExperiment
 from segmnist import StimSetDispatcher
 
-from segmnist.loader.mnist import load_standard_MNIST
+from segmnist.loader import load_standard_MNIST
 from segmnist.segmnistshapes import SquareGenerator
 from segmnist.segmnistshapes import RectangleGenerator
 
