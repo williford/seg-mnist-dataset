@@ -56,6 +56,11 @@ class RandomPositioning(object):
             min_pos_j = min(self._range_pix_j)
             max_pos_j = max(self._range_pix_j) + 1
 
+        if int(round(min_pos_i)) == int(round(max_pos_i)):
+            max_pos_i += 1.
+        if int(round(min_pos_j)) == int(round(max_pos_j)):
+            max_pos_j += 1.
+
         offset_i = random.randrange(int(round(min_pos_i)),
                                     int(round(max_pos_i)))
         offset_j = random.randrange(int(round(min_pos_j)),

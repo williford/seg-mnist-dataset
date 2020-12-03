@@ -8,7 +8,7 @@ from segmnist import SegMNISTShapes
 from segmnist import FGModAttendExperiment
 from segmnist import StimSetDispatcher
 
-from segmnist.loader.mnist import load_standard_MNIST
+from segmnist.loader import load_standard_MNIST
 from segmnist.segmnistshapes import SquareGenerator
 from segmnist.segmnistshapes import RectangleGenerator
 
@@ -18,11 +18,13 @@ from segmnist.textures import SinusoidalGratings
 from segmnist.textures import FGModTexture
 from segmnist.textures import IntermixTexture
 
-try:
-    import caffe
-    CaffeLayer = caffe.Layer
-except ImportError:
-    CaffeLayer = object
+# try:
+#     import caffe
+#     CaffeLayer = caffe.Layer
+# except ImportError:
+    # CaffeLayer = object
+
+CaffeLayer = object
 
 class SegMNISTShapesLayerSync(CaffeLayer):
     """
@@ -267,7 +269,7 @@ class SegMNISTShapesLayerSync(CaffeLayer):
                     labels = np.flatnonzero(cls_label[n])
 
                     # randomly pick one of the labels
-                    lbl = random.sample(labels, 1)[0]
+                    lbl = random.sample(list(labels), 1)[0]
                     top[2].data[n, lbl, 0, 0] = 1
 
                     # retain masked out regions

@@ -1,10 +1,10 @@
 import random
-from textures import FGModTexture
-from textures import WhiteNoiseTexture
-from . import mnist_generator
+from segmnist.textures import FGModTexture
+from segmnist.textures import WhiteNoiseTexture
+from segmnist import mnist_generator
 import numpy as np
-from segmnistshapes import SquareGenerator
-from positioning import RandomPositioning
+from segmnist.segmnistshapes import SquareGenerator
+from segmnist.positioning import RandomPositioning
 
 
 class FGModAttendExperiment(object):
